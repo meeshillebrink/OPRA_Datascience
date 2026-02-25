@@ -16,6 +16,7 @@ library(tidyverse)
 library(Rsubread)
 library(DESeq2)
 library(GOstats)
+library(pheatmap)
 ```
 
 --------------------------------------------------------------------------------
@@ -41,20 +42,15 @@ Met unique = TRUE zijn alleen reads meegenomen die op één duidelijke plek in h
 ```{R}
 alignment_statistics <- align(
   
-  index = "hg38_index/hg38_index" , 
-  # character string met de basisnaam van het indexbestand van het referentiegenoom, dat zich in     de huidige directory moet bevinden. Deze index is nodig om reads aan hun mogelijke positie      in het genoom te koppelen.
+  index = "hg38_index/hg38_index" , # character string met de basisnaam van het indexbestand van het referentiegenoom, dat zich in de huidige directory moet bevinden. Deze index is nodig om reads aan hun mogelijke positie in het genoom te koppelen.
   
-  readfile1 = file.path("raw_fastq", c( "liver_1.fastq.gz", "liver_2.fastq.gz", "liver_3.fastq.gz", "brain_1.fastq.gz", "brain_2.fastq.gz", "brain_3.fastq.gz" )) , 
-  # character vector met bestandsnamen van bestanden met sequentiereads. Bij paired-end             sequencing bevat dit de eerste reads van elk paar.
+  readfile1 = file.path("raw_fastq", c( "liver_1.fastq.gz", "liver_2.fastq.gz", "liver_3.fastq.gz", "brain_1.fastq.gz", "brain_2.fastq.gz", "brain_3.fastq.gz" )) , # character vector met bestandsnamen van bestanden met sequentiereads. Bij paired-end sequencing bevat dit de eerste reads van elk paar.
   
-  type = 0 , 
-  # character string of een integer die het type sequencing data geeft om zo te bepalen welk        mapping protocol gebruikt moet worden. (0 voor rna, 1 voor dna).
+  type = 0 , # character string of een integer die het type sequencing data geeft om zo te bepalen welk mapping protocol gebruikt moet worden. (0 voor rna, 1 voor dna).
   
-  input_format = "gzFASTQ" , 
-  # character string van het format van de inputreads (bijv. FASTQ, gzFASTQ, BAM), bepaalt hoe      de functie het bestand moet inlezen.
+  input_format = "gzFASTQ" , # character string van het format van de inputreads (bijv. FASTQ, gzFASTQ, BAM), bepaalt hoe de functie het bestand moet inlezen.
   
-  output_format = "BAM" , 
-  # character string van het format van de output (aligned reads), bepaalt in welk type bestand     (BAM/SAM) de aligner de resultaten opslaat.
+  output_format = "BAM" , # character string van het format van de output (aligned reads), bepaalt in welk type bestand (BAM/SAM) de aligner de resultaten opslaat.
   
   output_file = c(
     "liver_1.bam",
@@ -62,14 +58,12 @@ alignment_statistics <- align(
   "liver_3.bam",
   "brain_1.bam",
   "brain_2.bam",
-  "brain_3.bam") , 
-  # character vector die aangeeft wat de naam/namen van de output bestanden zijn. (standaard        afgeleid van bestandsnamen uit readfile1 met een extra suffix).
+  "brain_3.bam"
+  ) , # character vector die aangeeft wat de naam/namen van de output bestanden zijn. (standaard afgeleid van bestandsnamen uit readfile1 met een extra suffix).
   
-  unique = TRUE , 
-  # bepaalt of alleen uniek gemapte reads worden gerapporteerd. Bij TRUE worden alleen reads met     één beste mappinglocatie meegenomen, bij FALSE ook reads met meerdere mogelijke mappings.
+  unique = TRUE , # bepaalt of alleen uniek gemapte reads worden gerapporteerd. Bij TRUE worden alleen reads met één beste mappinglocatie meegenomen, bij FALSE ook reads met meerdere mogelijke mappings.
   
-  nthreads = 1 
-  # aantal CPU-kernen die tegelijk gebruikt mogen worden, meer threads = sneller alignen door       parallel werken. standaardwaarde is 1.
+  nthreads = 2 # aantal CPU-kernen die tegelijk gebruikt mogen worden, meer threads = sneller alignen door parallel werken. standaardwaarde is 1.
   
 )
 ```
@@ -104,6 +98,15 @@ bam_staafdiagram <- ggplot(alignment_df, aes(x = BAM, y = PercentUnique, fill = 
   ) +
   theme_minimal() 
 
+# staafdiagram opslaan in map van results
+ggsave(
+  filename = "results/bam_staafdiagram.png",
+  plot = bam_staafdiagram,
+  width = 8,
+  height = 6
+)
+
+# tonen staafdiagram
 bam_staafdiagram
 ```
 In figuur 1 zijn per BAM bestand het percentage uniek gemapte reads te zien. Hierbij valt op dat de percentages tussen de twee weefsels verschillen. De levermonsters laten waarden zien tussen ongeveer 49% en 78%, terwijl de hersenmonsters waarden laten zien tussen ongeveer 28 tot 66%. Daarnaast is binnen beide weefseltypes spreiding tussen replicaten zichtbaar.
@@ -115,24 +118,59 @@ Uit de alignment statistieken blijkt dat het percentage uniek gemapte reads vers
 --------------------------------------------------------------------------------
 
 # Count tabel en data inspectie
+### korte toelichting voor de analyses en verantwoord de gebruikte R code
+
+## Genereren van count table
 
 ```{R}
+# Genereren van een count-table
 read_counts <- featureCounts(
   
-  files = open.srcfile() , # character vector die de naam/namen van het bestand/de bestanden met de uitgelijnde reads geeft. (BAM/SAM, bestandtype wordt automatisch gedetecteerd).
+  files = file.path("aligned_bam", c( "liver_1.bam", "liver_2.bam", "liver_3.bam", "brain_1.bam", "brain_2.bam", "brain_3.bam" )) , # character vector die de naam/namen van het bestand/de bestanden met de uitgelijnde reads geeft. (BAM/SAM, bestandtype wordt automatisch gedetecteerd).
   
-  annot.inbuilt =  , # character string die aangeeft welke ingebouwde genannotatie wordt gebruikt bij het samenvatten van reads. De waarde bepaalt voor welk organisme en genoomversie de annotatie geldt, met mm39 als standaard. In het geval van deze analyse wordt hg38 gebruikt.
+  annot.inbuilt = "hg38" , # character string die aangeeft welke ingebouwde genannotatie wordt gebruikt bij het samenvatten van reads. De waarde bepaalt voor welk organisme en genoomversie de annotatie geldt, met mm39 als standaard. In het geval van deze analyse wordt hg38 gebruikt.
   
-  useMetaFeatures = ............... , # indicator voor op welk niveau reads worden samengevat. Bij TRUE gebeurt dit op meta-feature niveau zoals genen, bij FALSE op feature-niveau zoals exons. In het geval van deze analyse is het TRUE.
+  useMetaFeatures = TRUE , # indicator voor op welk niveau reads worden samengevat. Bij TRUE gebeurt dit op meta-feature niveau zoals genen, bij FALSE op feature-niveau zoals exons. In het geval van deze analyse is het TRUE.
   
-  strandSpecific = ............... , # Integer vector die bepaalt of en hoe rekening wordt gehouden met de strandrichting bij het tellen van reads. Waarde 0 betekent geen strand-specifieke telling, 1 telt reads in dezelfde richting als de annotatie en 2 in de omgekeerde richting. Standaard wordt 0 gebruikt.
+  strandSpecific = 0 , # Integer vector die bepaalt of en hoe rekening wordt gehouden met de strandrichting bij het tellen van reads. Waarde 0 betekent geen strand-specifieke telling, 1 telt reads in dezelfde richting als de annotatie en 2 in de omgekeerde richting. Standaard wordt 0 gebruikt.
   
-  isPairedEnd = ............... , # logical vector die aangeeft of de gebruikte libraries paired-end reads bevatten. FALSE betekent single-end data. Deze instelling bepaalt samen met countReadPairs of reads per paar of afzonderlijk worden geteld.
+  isPairedEnd = FALSE , # logical vector die aangeeft of de gebruikte libraries paired-end reads bevatten. FALSE betekent single-end data. Deze instelling bepaalt samen met countReadPairs of reads per paar of afzonderlijk worden geteld.
   
-  nthreads = ............... # aantal CPU-kernen die tegelijk gebruikt mogen worden, meer threads = sneller alignen door parallel werken. standaardwaarde is 1.
+  nthreads = 2 # aantal CPU-kernen die tegelijk gebruikt mogen worden, meer threads = sneller alignen door parallel werken. standaardwaarde is 1.
 )
 ```
 
+## Omzetten van de count tabel naar een DESeqDataSet
+
+```{r}
+
+# Countmatrix uit list halen
+countDatamatrix <- read_counts$counts
+
+# Metadata maken/definieren
+metadata_coldata <- data.frame(
+  row.names = colnames(countDatamatrix),
+  weefsel = c("Lever", "Lever", "Lever", "Brein", "Brein", "Brein")
+)
+
+DESeqDataSetFromMatrix(
+  countData = countDatamatrix, # De count tabel in de vorm van een matrix
+  colData = metadata_coldata, # De metadata van de count tabel in de vorm van een dataframe, zodat voor elk sample aangegeven wordt uit welk weefsel deze afkomstig is.
+  design = ~ weefsel # Een formule die aangeeft welk verschil er getest moet worden, in dit geval is dat verschil: type weefsel.
+)
+```
+
+## Data inspectie mbv correlatieheatmap en PCA
+
+```{r}
+# Data inspectie dmv PCA
+```
+
+```{r}
+# Data inspectie dmv correlatieheatmap
+```
+
+## Conclusie van de correlatieheatmap en PCA
 --------------------------------------------------------------------------------
 
 # DGE analyse
