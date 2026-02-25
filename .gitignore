@@ -47,3 +47,11 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# folders
+aligned_bam/
+counts/
+hg38_index/
+qc/
+raw_fastq/
+results/
