@@ -53,13 +53,49 @@ git push
 Pullen:
 git pull
 
-PADEN NAAR DE DATA (HU RSTUDIO SERVER)
 
-Indexbestanden (hg38):
-/home/data/opra4v/hg38_index/
+DATA KOPIËREN VAN DE SERVER (FASTQ / INDEX / BAM)
+
+De grote databestanden staan op de gedeelde HU-server en worden niet meegeversioneerd.
+Je kunt ze zelf kopiëren naar je projectmap.
+
+Paden naar de data:
+- Indexbestanden (hg38): /home/data/opra4v/hg38_index/
+- FASTQ-bestanden:       /home/data/opra4v/fastq/
+
+
+BESTANDEN KOPIËREN VIA R (file.copy)
+
+Voorbeeld: FASTQ-bestanden kopiëren naar je eigen projectmap:
+
+dir.create("fastq", showWarnings = FALSE)
+file.copy(
+  from = list.files("/home/data/opra4v/fastq/", full.names = TRUE),
+  to   = "fastq",
+  recursive = TRUE
+)
+
+Voorbeeld: indexbestanden kopiëren:
+
+dir.create("hg38_index", showWarnings = FALSE)
+file.copy(
+  from = list.files("/home/data/opra4v/hg38_index/", full.names = TRUE),
+  to   = "hg38_index",
+  recursive = TRUE
+)
+
+
+BESTANDEN KOPIËREN VIA DE TERMINAL
 
 FASTQ-bestanden:
-/home/data/opra4v/fastq/
+cp /home/data/opra4v/fastq/* ./fastq/
+
+Indexbestanden:
+cp /home/data/opra4v/hg38_index/* ./hg38_index/
+
+Let op:
+Gebruik eerst mkdir fastq of mkdir hg38_index als de map nog niet bestaat.
+
 
 RAPPORT OPENEN
 
