@@ -77,9 +77,10 @@ total_reads <- alignment_statistics["Total_reads", ]
 percent_unique <- (unique_reads / total_reads) * 100
 
 # maken van een dataframe voor de staafdiagram van uniquely mapped reads per BAM file
+
 bam_files <- colnames(alignment_statistics)
 
-tissue <- ifelse(grepl("liver", bam_files), "Lever", "Brein")
+tissue <- ifelse(grepl("liver", bam_files), "Lever", "Brein") # Labelt bestanden als 'Lever' als 'liver' in de bestandsnaam voorkomt, anders 'Brein'
 
 alignment_df <- data.frame(
   BAM = bam_files,
@@ -113,9 +114,9 @@ In figuur 1 zijn per BAM bestand het percentage uniek gemapte reads te zien. Hie
 
 ## Conclusie van de alignmentstatistieken
 
-Uit de alignment statistieken blijkt dat het percentage uniek gemapte reads verschilt tussen de verschillende BAM-bestanden. Zowel binnen de lever- als de breinmonsters is spreiding zichtbaar. Een paar samples hebben een duidelijk lager percentage dan andere. Dit laat zien dat de alignmentkwaliteit niet voor alle monsters gelijk is.
+Uit de alignment statistieken blijkt dat het percentage uniek gemapte reads verschilt tussen de verschillende BAM-bestanden. Zowel binnen de lever- als de breinmonsters is spreiding zichtbaar. Een paar samples hebben een duidelijk lager percentage dan andere.
 
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 
 # Count tabel en data inspectie
 ### korte toelichting voor de analyses en verantwoord de gebruikte R code
