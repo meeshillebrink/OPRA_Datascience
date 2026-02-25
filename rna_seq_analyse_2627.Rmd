@@ -63,7 +63,7 @@ alignment_statistics <- align(
   
   unique = TRUE , # bepaalt of alleen uniek gemapte reads worden gerapporteerd. Bij TRUE worden alleen reads met één beste mappinglocatie meegenomen, bij FALSE ook reads met meerdere mogelijke mappings.
   
-  nthreads = 30 # aantal CPU-kernen die tegelijk gebruikt mogen worden, meer threads = sneller alignen door parallel werken. standaardwaarde is 1.
+  nthreads = 2 # aantal CPU-kernen die tegelijk gebruikt mogen worden, meer threads = sneller alignen door parallel werken. standaardwaarde is 1.
   
 )
 ```
