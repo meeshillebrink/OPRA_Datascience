@@ -8,11 +8,13 @@ De volledige analyse staat in het bestand:
 Grote databestanden (FASTQ, BAM, indexbestanden, QC-output en tussenresultaten) zijn uitgesloten via .gitignore omdat deze te groot zijn en niet nodig zijn voor beoordeling.
 
 INHOUD VAN DE REPOSITORY
+--
 rnaseq_opdracht.Rmd   – hoofdrapport met analyses en interpretaties
 .gitignore            – uitgesloten bestanden en mappen
 README.md             – documentatie van het project
 
 REPO CLONEN (RSTUDIO SERVER / TERMINAL)
+--
 Optie 1 – Via RStudio:
 New Project → Version Control → Git → vul de HTTPS-URL in.
 
@@ -28,6 +30,7 @@ Fine-grained tokens werken NIET voor repositories waar je collaborator bent.
 Gebruik daarom een classic token met ‘repo’-rechten.
 
 GITHUB AUTHENTICATIE (TOKEN + CREDENTIALS)
+--
 
 1. Classic token aanmaken:
 GitHub → Settings → Developer settings →
@@ -44,6 +47,7 @@ git config --global credential.helper store
 Zonder credential.helper store moet je bij elke push opnieuw je token invoeren.
 
 PUSHEN EN PULLEN
+--
 
 Pushen:
 git add .
@@ -55,6 +59,7 @@ git pull
 
 
 DATA KOPIËREN VAN DE SERVER (FASTQ / INDEX / BAM)
+--
 
 De grote databestanden staan op de gedeelde HU-server en worden niet meegeversioneerd.
 Je kunt ze zelf kopiëren naar je projectmap.
@@ -65,6 +70,7 @@ Paden naar de data:
 
 
 BESTANDEN KOPIËREN VIA R (file.copy)
+--
 
 Voorbeeld: FASTQ-bestanden kopiëren naar je eigen projectmap:
 
@@ -86,6 +92,7 @@ file.copy(
 
 
 BESTANDEN KOPIËREN VIA DE TERMINAL
+--
 
 FASTQ-bestanden:
 cp /home/data/opra4v/fastq/* ./fastq/
@@ -98,12 +105,14 @@ Gebruik eerst mkdir fastq of mkdir hg38_index als de map nog niet bestaat.
 
 
 RAPPORT OPENEN
+--
 
 1. Clone of download deze repository.
 2. Open rnaseq_opdracht.Rmd in RStudio.
 3. Klik ‘Knit’ om het volledige rapport te genereren.
 
 PROJECTGROEP
+--
 
 Arjan Peters
 Chelaysiah Steba
