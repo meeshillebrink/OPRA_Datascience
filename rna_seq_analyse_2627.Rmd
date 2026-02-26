@@ -28,26 +28,33 @@ Om deze vraag te beantwoorden wordt RNA-seq data geanalyseerd. De reads worden u
 <br>
 
 ```{R}
+# deze code zorgt ervoor dat er een standaard folder gemaakt word die gebruikt kan worden voor alle code zodat alle data altijd op de juiste plek zit. verder doet download de code ook meteen alle files die gebruikt worden zodat je dat zelf ook niet hoeft te doen.
+
 project_dir <- file.path(Sys.getenv("HOME"), "project")
+# deze code maakt een standaard pat naar de folder die ook meteen word gemaakt
 
 data_dir <- file.path(project_dir, "data", "raw")
+bam_dir <- file.path(project_dir, "data", "bam")
 index_dir <- file.path(project_dir,"index")
-fastq_dest <- file.path(project_dir, "data", "raw")
-index_dest <- file.path(project_dir, "index")
-fastq_src <- "/home/data/opra4v/fastq/"
-index_src <- "/home/data/opra4v/hg38_index/"
+# de _dir code's maken routes naar specific tabs in de folders zodat alles meteen netjes op zijn eigen plek kan belanden.
 
 dir.create(data_dir, recursive = T, showWarnings = F)
+dir.create(data_dir, recursive = T, showWarnings = F)
 dir.create(index_dir, recursive = T, showWarnings = F)
+# de create functie maakt de folders en de tabs aan volgens de route's die we hebben gegeven. en recursive zorgt ervoor dat als de folder en tabs al bestaan dat het niet nog een keer word gemaakt.
+
+fastq_dest <- file.path(project_dir, "data", "raw")
+index_dest <- file.path(project_dir, "index")
+# de _dest code's worden gebruikt om aan te geven waar de data als die gecopied is naar toe moet.
+
+fastq_src <- "/home/data/opra4v/fastq/"
+index_src <- "/home/data/opra4v/hg38_index/"
+# de _srx code's geven de locaties die waar de files vandaan worden gedownload.
 
 file.copy(fastq_src, fastq_dest, recursive = T)
 file.copy(index_src, index_dest, recursive =T)
-
-
-
-
+# de copy functie copied de code van de locatie die wordt aangegeven met de _src code en plakt het op de locatie die wordt aangegeven met _dest en de recursive wordt gebruikt om er voor te zorgen dat als die bestanden er al zijn dat die dan niet nog een keer worden gecopied.
 ```
-
 
 # Alignment
 
@@ -63,10 +70,10 @@ Met unique = TRUE zijn alleen reads meegenomen die op één duidelijke plek in h
 ```{R}
 alignment_statistics <- align(
   
-  index = "hg38_index/hg38_index" , 
+  index = "~/project/index/hg38_index/hg38_index" , 
   # character string met de basisnaam van het indexbestand van het referentiegenoom, dat zich in     de huidige directory moet bevinden. Deze index is nodig om reads aan hun mogelijke positie      in het genoom te koppelen.
   
-  readfile1 = file.path("raw_fastq", c( "liver_1.fastq.gz", "liver_2.fastq.gz", "liver_3.fastq.gz", "brain_1.fastq.gz", "brain_2.fastq.gz", "brain_3.fastq.gz" )) , 
+  readfile1 = file.path("~/project/data/raw/fastq/", c( "SRR7961208.fastq.gz", "SRR7961209.fastq.gz", "SRR7961210.fastq.gz", "SRR7961214.fastq.gz", "SRR7961215.fastq.gz", "SRR7961216.fastq.gz")) , 
   # character vector met bestandsnamen van bestanden met sequentiereads. Bij paired-end             sequencing bevat dit de eerste reads van elk paar.
   
   type = 0 , 
@@ -90,7 +97,7 @@ alignment_statistics <- align(
   unique = TRUE , 
   # bepaalt of alleen uniek gemapte reads worden gerapporteerd. Bij TRUE worden alleen reads met     één beste mappinglocatie meegenomen, bij FALSE ook reads met meerdere mogelijke mappings.
   
-  nthreads = 1 
+  nthreads = 30 
   # aantal CPU-kernen die tegelijk gebruikt mogen worden, meer threads = sneller alignen door       parallel werken. standaardwaarde is 1.
   
 )
