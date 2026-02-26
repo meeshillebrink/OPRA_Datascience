@@ -94,7 +94,7 @@ bam_staafdiagram <- ggplot(alignment_df, aes(x = BAM, y = PercentUnique, fill = 
   labs(
     title = "Percentage uniek gemapte reads per BAM bestand",
     x = "BAM bestand",
-    y = "Percentage uniek gemapte reads",
+    y = "Percentage uniek gemapte reads (%)",
     fill = "Weefsel"
   ) +
   theme_minimal() 
