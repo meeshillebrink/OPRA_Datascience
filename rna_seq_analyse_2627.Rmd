@@ -19,7 +19,7 @@ library(GOstats)
 library(pheatmap)
 ```
 
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 # Introductie
 
 In dit project wordt onderzocht welke genen verschillend tot expressie komen tussen hersenweefsel en leverweefsel. De onderzoeksvraag luidt: welke verschillen in genexpressie zijn aanwezig tussen hersen- en leverweefsel en welke biologische processen hangen hiermee samen?
