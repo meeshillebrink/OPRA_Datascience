@@ -38,10 +38,12 @@ bam_dir <- file.path(project_dir, "data", "bam")
 index_dir <- file.path(project_dir,"index")
 # de _dir code's maken routes naar specific tabs in de folders zodat alles meteen netjes op zijn eigen plek kan belanden.
 
-dir.create(data_dir, recursive = T, showWarnings = F)
-dir.create(data_dir, recursive = T, showWarnings = F)
-dir.create(index_dir, recursive = T, showWarnings = F)
-# de create functie maakt de folders en de tabs aan volgens de route's die we hebben gegeven. en recursive zorgt ervoor dat als de folder en tabs al bestaan dat het niet nog een keer word gemaakt.
+make_dir <- function(x) {
+  if (!dir.exists(x)) dir.create(x, recursive = T)}
+make_dir(data_dir)
+make_dir(bam_dir)
+make_dir(index_dir)
+# deze functie maakt de folders aan volgens de route die eerder gemaakt is als die nog niet bestaan, maar als ze al bestaan dan gebeurd dat niet.
 
 fastq_dest <- file.path(project_dir, "data", "raw")
 index_dest <- file.path(project_dir, "index")
@@ -51,8 +53,10 @@ fastq_src <- "/home/data/opra4v/fastq/"
 index_src <- "/home/data/opra4v/hg38_index/"
 # de _srx code's geven de locaties die waar de files vandaan worden gedownload.
 
-file.copy(fastq_src, fastq_dest, recursive = T)
-file.copy(index_src, index_dest, recursive =T)
+if (!dir.exists(fastq_dest)) {
+  file.copy(fastq_src, fastq_dest, recursive = T)} 
+if (!dir.exists(index_dest)) {
+  file.copy(index_src, index_dest, recursive = T)}
 # de copy functie copied de code van de locatie die wordt aangegeven met de _src code en plakt het op de locatie die wordt aangegeven met _dest en de recursive wordt gebruikt om er voor te zorgen dat als die bestanden er al zijn dat die dan niet nog een keer worden gecopied.
 ```
 
@@ -76,22 +80,22 @@ alignment_statistics <- align(
   readfile1 = file.path("~/project/data/raw/fastq/", c( "SRR7961208.fastq.gz", "SRR7961209.fastq.gz", "SRR7961210.fastq.gz", "SRR7961214.fastq.gz", "SRR7961215.fastq.gz", "SRR7961216.fastq.gz")) , 
   # character vector met bestandsnamen van bestanden met sequentiereads. Bij paired-end             sequencing bevat dit de eerste reads van elk paar.
   
-  type = 0 , 
+  type = 0, 
   # character string of een integer die het type sequencing data geeft om zo te bepalen welk        mapping protocol gebruikt moet worden. (0 voor rna, 1 voor dna).
   
-  input_format = "gzFASTQ" , 
+  input_format = "gzFASTQ", 
   # character string van het format van de inputreads (bijv. FASTQ, gzFASTQ, BAM), bepaalt hoe      de functie het bestand moet inlezen.
   
-  output_format = "BAM" , 
+  output_format = "BAM", 
   # character string van het format van de output (aligned reads), bepaalt in welk type bestand     (BAM/SAM) de aligner de resultaten opslaat.
   
-  output_file = c(
+  output_file = file.path( "~/project/data/", c(
     "liver_1.bam",
   "liver_2.bam",
   "liver_3.bam",
   "brain_1.bam",
   "brain_2.bam",
-  "brain_3.bam") , 
+  "brain_3.bam")), 
   # character vector die aangeeft wat de naam/namen van de output bestanden zijn. (standaard        afgeleid van bestandsnamen uit readfile1 met een extra suffix).
   
   unique = TRUE , 
