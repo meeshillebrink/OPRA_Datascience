@@ -27,6 +27,39 @@ Om deze vraag te beantwoorden wordt RNA-seq data geanalyseerd. De reads worden u
 
 <br>
 
+```{R}
+# deze code zorgt ervoor dat er een standaard folder gemaakt word die gebruikt kan worden voor alle code zodat alle data altijd op de juiste plek zit. verder doet download de code ook meteen alle files die gebruikt worden zodat je dat zelf ook niet hoeft te doen.
+
+project_dir <- file.path(Sys.getenv("HOME"), "project")
+# deze code maakt een standaard pat naar de folder die ook meteen word gemaakt
+
+data_dir <- file.path(project_dir, "data", "raw")
+bam_dir <- file.path(project_dir, "data", "bam")
+index_dir <- file.path(project_dir,"index")
+# de _dir code's maken routes naar specific tabs in de folders zodat alles meteen netjes op zijn eigen plek kan belanden.
+
+make_dir <- function(x) {
+  if (!dir.exists(x)) dir.create(x, recursive = T)}
+make_dir(data_dir)
+make_dir(bam_dir)
+make_dir(index_dir)
+# deze functie maakt de folders aan volgens de route die eerder gemaakt is als die nog niet bestaan, maar als ze al bestaan dan gebeurd dat niet.
+
+fastq_dest <- file.path(project_dir, "data", "raw")
+index_dest <- file.path(project_dir, "index")
+# de _dest code's worden gebruikt om aan te geven waar de data als die gecopied is naar toe moet.
+
+fastq_src <- "/home/data/opra4v/fastq/"
+index_src <- "/home/data/opra4v/hg38_index/"
+# de _srx code's geven de locaties die waar de files vandaan worden gedownload.
+
+if (!dir.exists(fastq_dest)) {
+  file.copy(fastq_src, fastq_dest, recursive = T)} 
+if (!dir.exists(index_dest)) {
+  file.copy(index_src, index_dest, recursive = T)}
+# de copy functie copied de code van de locatie die wordt aangegeven met de _src code en plakt het op de locatie die wordt aangegeven met _dest en de recursive wordt gebruikt om er voor te zorgen dat als die bestanden er al zijn dat die dan niet nog een keer worden gecopied.
+```
+
 # Alignment
 
 Voor de alignment zijn de FASTQ-bestanden van lever- en hersenweefsel uitgelijnd tegen het humane referentiegenoom hg38 met de functie align() uit het Rsubread pakket. Hiervoor is een vooraf gegenereerde hg38-index gebruikt. De zes FASTQ-bestanden (drie lever en drie brein) zijn meegegeven via readfile1, zodat elke sample apart wordt uitgelijnd.
@@ -41,36 +74,31 @@ Met unique = TRUE zijn alleen reads meegenomen die op één duidelijke plek in h
 ```{R}
 alignment_statistics <- align(
   
-  index = "hg38_index/hg38_index" , 
+  index = "~/project/index/hg38_index/hg38_index" , 
   # character string met de basisnaam van het indexbestand van het referentiegenoom, dat zich in     de huidige directory moet bevinden. Deze index is nodig om reads aan hun mogelijke positie      in het genoom te koppelen.
   
-  readfile1 = file.path("raw_fastq", c( "liver_1.fastq.gz", "liver_2.fastq.gz", "liver_3.fastq.gz", "brain_1.fastq.gz", "brain_2.fastq.gz", "brain_3.fastq.gz" )) , 
+  readfile1 = file.path("~/project/data/raw/fastq/", c( "SRR7961208.fastq.gz", "SRR7961209.fastq.gz", "SRR7961210.fastq.gz", "SRR7961214.fastq.gz", "SRR7961215.fastq.gz", "SRR7961216.fastq.gz")) , 
   # character vector met bestandsnamen van bestanden met sequentiereads. Bij paired-end             sequencing bevat dit de eerste reads van elk paar.
   
-  type = 0 , 
+  type = 0, 
   # character string of een integer die het type sequencing data geeft om zo te bepalen welk        mapping protocol gebruikt moet worden. (0 voor rna, 1 voor dna).
   
-  input_format = "gzFASTQ" , 
+  input_format = "gzFASTQ", 
   # character string van het format van de inputreads (bijv. FASTQ, gzFASTQ, BAM), bepaalt hoe      de functie het bestand moet inlezen.
   
-  output_format = "BAM" , 
+  output_format = "BAM", 
   # character string van het format van de output (aligned reads), bepaalt in welk type bestand     (BAM/SAM) de aligner de resultaten opslaat.
   
-  output_file = c(
-    "liver_1.bam",
-  "liver_2.bam",
-  "liver_3.bam",
-  "brain_1.bam",
-  "brain_2.bam",
-  "brain_3.bam") , 
+  output_file = file.path( "~/project/data/bam/", c(
+    "liver_1.bam", "liver_2.bam", "liver_3.bam",
+  "brain_1.bam", "brain_2.bam", "brain_3.bam")), 
   # character vector die aangeeft wat de naam/namen van de output bestanden zijn. (standaard        afgeleid van bestandsnamen uit readfile1 met een extra suffix).
   
-  unique = TRUE , 
+  unique = T , 
   # bepaalt of alleen uniek gemapte reads worden gerapporteerd. Bij TRUE worden alleen reads met     één beste mappinglocatie meegenomen, bij FALSE ook reads met meerdere mogelijke mappings.
   
-  nthreads = 1 
+  nthreads = 30 
   # aantal CPU-kernen die tegelijk gebruikt mogen worden, meer threads = sneller alignen door       parallel werken. standaardwaarde is 1.
-  
 )
 ```
  
@@ -99,14 +127,14 @@ bam_staafdiagram <- ggplot(alignment_df, aes(x = BAM, y = PercentUnique, fill = 
   labs(
     title = "Percentage uniek gemapte reads per BAM bestand",
     x = "BAM bestand",
-    y = "Percentage uniek gemapte reads",
+    y = "Percentage uniek gemapte reads (%)",
     fill = "Weefsel"
   ) +
   theme_minimal() 
 
 bam_staafdiagram
 ```
-In figuur 1 zijn per BAM bestand het percentage uniek gemapte reads te zien. Hierbij valt op dat de percentages tussen de twee weefsels verschillen. De levermonsters laten waarden zien tussen ongeveer 49% en 78%, terwijl de hersenmonsters waarden laten zien tussen ongeveer 28 tot 66%. Daarnaast is binnen beide weefseltypes spreiding tussen replicaten zichtbaar.
+In figuur 1 zijn per BAM bestand het percentage uniek gemapte reads te zien. Hierbij valt op dat de percentages tussen de twee weefsels verschillen. De levermonsters laten waarden zien tussen ongeveer 49% en 78%, terwijl de hersenmonsters waarden laten zien tussen ongeveer 28% tot 66%. Daarnaast is binnen beide weefseltypes spreiding tussen replicaten zichtbaar.
 
 ## Conclusie van de alignmentstatistieken
 
