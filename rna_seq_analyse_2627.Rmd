@@ -110,7 +110,7 @@ ggsave(
 # tonen staafdiagram
 bam_staafdiagram
 ```
-In figuur 1 zijn per BAM bestand het percentage uniek gemapte reads te zien. Hierbij valt op dat de percentages tussen de twee weefsels verschillen. De levermonsters laten waarden zien tussen ongeveer 49% en 78%, terwijl de hersenmonsters waarden laten zien tussen ongeveer 28 tot 66%. Daarnaast is binnen beide weefseltypes spreiding tussen replicaten zichtbaar.
+In figuur 1 zijn per BAM bestand het percentage uniek gemapte reads te zien. Hierbij valt op dat de percentages tussen de twee weefsels verschillen. De levermonsters laten waarden zien tussen ongeveer 49% en 78%, terwijl de hersenmonsters waarden laten zien tussen ongeveer 28% tot 66%. Daarnaast is binnen beide weefseltypes spreiding tussen replicaten zichtbaar.
 
 ## Conclusie van de alignmentstatistieken
 
