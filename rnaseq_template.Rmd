@@ -1,0 +1,261 @@
+---
+title: "Template voor het analyseren van RNA-seq data"
+author: "Bas van Gestel"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Setup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+```
+
+```{r, eval=TRUE, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(Rsubread)
+library(DESeq2)
+library(GOstats)
+```
+
+--------------------------------------------------------------------------------
+
+## Alignment
+
+
+```{R}
+alignment_statistics <- align(
+  
+  index = ..........., # ......
+  
+  readfile1 = .......... , # ...........
+  
+  type = ................ , # ...........
+  
+  input_format =  ................ , # ...............
+  
+  output_format = ............... , # ...............
+  
+  output_file = ............... , # ...............
+  
+  unique = ............... , # ...............
+  
+  nthreads = ............... # ...............
+  
+)
+```
+
+--------------------------------------------------------------------------------
+
+## Count tabel en data inspectie
+
+```{R}
+read_counts <- featureCounts(
+  
+  files = ............... , # ...............
+  
+  annot.inbuilt = ............... , # ...............
+  
+  useMetaFeatures = ............... , # ...............
+  
+  strandSpecific = ............... , # ...............
+  
+  isPairedEnd = ............... , # ...............
+  
+  nthreads = ............... # ...............
+)
+```
+
+--------------------------------------------------------------------------------
+
+## DGE analyse
+
+```{r, eval=TRUE}
+# ...............
+dge <- DESeq(
+    
+    object = ............... , # ...............
+)
+```
+
+--------------------------------------------------------------------------------
+
+## GO-term analyse
+
+```{r, eval=TRUE}
+test_object <- new(
+    
+    "GOHyperGParams",
+    
+    geneIds = ............... , # ...............
+    
+    universeGeneIds = ............... , # ...............
+    
+    annotation = ............... , # ...............juyf,l
+    
+    ontology = ............... , # ...............
+    
+    pvalueCutoff = ............... , # ...............
+    
+    testDirection = ............... # ...............
+    )
+
+goterm_analysis <- hyperGTest(test_object)
+```
+# week 3: Alignment van RNA-seq data
+# intdoductie
+In dit project onderzoeken we welke genen verschillend tot expressie komen tussen het hersenweefsel en het leverweefsel.
+Om deze onderzoekvraag te beantwoorden analyseren we RNA-seq data van beide weefsels.De analyse bestaat uit meerdere stappen: eerste voeren we de alignment uit van de ruwe FASTQ-reads op het humane referentiegenoom (hg38), vervolgens tellen we het aantal reads per gen, en daarna bepalen we welke genen significant verschillend tot expressie zijn. De alignment vormt de basis voor alle vervolganalyses en is daarom een curciale stap in de workflow.
+
+#Toelichting op de alignment analyse
+Voor de alignment maken we gebruik van de `align()`functie uit het Rsubread‑pakket. We werken met zes FASTQ‑bestanden: drie afkomstig uit het hersenweefsel (hersenen) en drie uit het leverweefsel (lever). Deze bestanden zijn opgeslagen op de server in `/home/data/opra4v/fastq/`. De alignment wordt uitgevoerd tegen het humane referentiegenoom hg38, waarvan de vooraf geïndexeerde bestanden beschikbaar zijn in `/home/data/opra4v/hg38_index/`. In de R‑code geven we het pad naar deze index door via het argument `index`. Omdat de FASTQ‑bestanden gecomprimeerd zijn, gebruiken we `input_format = "gzFASTQ"`. De output van de alignment bestaat uit BAM‑bestanden (`output_format = "BAM"`). Daarnaast kiezen we voor `unique = TRUE`, zodat alleen reads die uniek op het genoom uitgelijnd zijn (uniquely mapped) worden meegenomen. Dit verhoogt de betrouwbaarheid van de downstream analyses. De alignmentstatistieken worden opgeslagen in de variabele `alignment_statistics`, zodat we deze later kunnen gebruiken voor het berekenen van het percentage uniquely mapped reads en het maken van een grafiek.
+```{r setup, message=FALSE}
+library(Rsubread)
+library(ggplot2)
+```
+
+```{r paths}
+fastq_dir  <- "/home/data/opra4v/fastq/"
+index_base <- "/home/data/opra4v/hg38_index/hg38_index"
+```
+
+```{r test}
+fastq_dir
+```
+
+```{r test}
+fastq_dir
+```
+
+
+```{r check_fastq}
+list.files(fastq_dir)
+```
+```{r}
+list.files(index_base)
+```
+```{r select_fastq}
+all_fastq <- list.files(fastq_dir, full.names = TRUE)
+
+```
+
+#lever samples
+```{r}
+lever_fastq <- all_fastq[grepl("1208|1209|1210.", all_fastq)]
+```
+#hersen samples
+```{r}
+hersen_fastq <- all_fastq[grepl("1214|1215|1216", all_fastq)]
+```
+
+```{r align_lever}
+for (f in lever_fastq) {
+  sample_name <- gsub(".fastq.gz", "", basename(f))
+  align(
+    index = index_base,
+    readfile1 = f,
+    readfile2 = NULL,
+    type = "rna",
+    input_format = "gzFASTQ",
+    output_format = "BAM",
+    output_file = paste0(sample_name, "_aligned.bam"),
+    unique = TRUE,
+    nthreads = 4
+  )
+}
+
+```
+
+```{r}
+lever_fastq
+```
+```{r align_hersen}
+for (f in hersen_fastq) {
+  sample_name <- gsub(".fastq.gz", "", basename(f))
+  align(
+    index = index_base,
+    readfile1 = f,
+    readfile2 = NULL,
+    type = "rna",
+    input_format = "gzFASTQ",
+    output_format = "BAM",
+    output_file = paste0(sample_name, "_aligned.bam"),
+    unique = TRUE,
+    nthreads = 4
+  )
+}
+
+```
+# alle bestanden in huidige map ophalen
+```{r}
+bam_files <- list.files(".",pattern = "bam$", full.names = TRUE)
+```
+#alignmentstatistieken per BAM-file berekenen
+```{r}
+alignment_statistics <- sapply(bam_files, function(bam) {
+  propmapped(bam)
+})
+```
+
+```{r}
+alignment_statistics
+```
+# Berekeningen
+```{r}
+unique_reads <- alignment_statistics["NumMapped",]
+total_reads <- alignment_statistics["NumTotal",]
+percent_unique <- as.numeric(alignment_statistics["PropMapped",]) * 100
+```
+# Dataframe bouwen
+```{r}
+df <- data.frame(
+  sample = colnames(alignment_statistics),
+  unique_reads = unique_reads,
+  total_reads = total_reads,
+  percent_unique = percent_unique
+)
+```
+# liver- en hersenmonsters selecteren
+```{r}
+lever_samples <- c("./SRR7961208_aligned.bam", "./SRR7961209_aligned.bam", "./SRR7961210_aligned.bam")
+brain_samples <- c("./SRR7961214_aligned.bam", "./SRR7961215_aligned.bam", "./SRR7961216_aligned.bam")
+```
+
+```{r}
+df_lever <- df[df$sample %in% lever_samples,]
+df_brain <- df[df$sample %in% brain_samples,]
+```
+
+
+```{r}
+ggplot(df_lever, aes(x = sample, y = percent_unique, fill = sample)) + geom_col() +
+  labs(
+    title = "Percentage uniek gemapte reads – Lever samples",
+        x = "Sample",
+        y = "Uniek gemapt (%)"
+        ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none")
+```
+
+```{r}
+colnames(alignment_statistics)
+```
+
+```{r}
+df_lever
+```
+
+```{r}
+ggplot(df_brain, aes(x = sample, y = percent_unique, fill = sample)) + geom_col() +
+  labs(
+    title = "Percentage uniek gemapte reads – Hersenen samples",
+        x = "Sample",
+        y = "Uniek gemapt (%)"
+        ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none")
+```
+

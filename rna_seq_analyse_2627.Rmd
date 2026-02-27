@@ -41,20 +41,15 @@ Met unique = TRUE zijn alleen reads meegenomen die op één duidelijke plek in h
 ```{R}
 alignment_statistics <- align(
   
-  index = "hg38_index/hg38_index" , 
-  # character string met de basisnaam van het indexbestand van het referentiegenoom, dat zich in     de huidige directory moet bevinden. Deze index is nodig om reads aan hun mogelijke positie      in het genoom te koppelen.
+  index = "hg38_index/hg38_index" , # character string met de basisnaam van het indexbestand van het referentiegenoom, dat zich in de huidige directory moet bevinden. Deze index is nodig om reads aan hun mogelijke positie in het genoom te koppelen.
   
-  readfile1 = file.path("raw_fastq", c( "liver_1.fastq.gz", "liver_2.fastq.gz", "liver_3.fastq.gz", "brain_1.fastq.gz", "brain_2.fastq.gz", "brain_3.fastq.gz" )) , 
-  # character vector met bestandsnamen van bestanden met sequentiereads. Bij paired-end             sequencing bevat dit de eerste reads van elk paar.
+  readfile1 = file.path("raw_fastq", c( "liver_1.fastq.gz", "liver_2.fastq.gz", "liver_3.fastq.gz", "brain_1.fastq.gz", "brain_2.fastq.gz", "brain_3.fastq.gz" )) , # character vector met bestandsnamen van bestanden met sequentiereads. Bij paired-end sequencing bevat dit de eerste reads van elk paar.
   
-  type = 0 , 
-  # character string of een integer die het type sequencing data geeft om zo te bepalen welk        mapping protocol gebruikt moet worden. (0 voor rna, 1 voor dna).
+  type = 0 , # character string of een integer die het type sequencing data geeft om zo te bepalen welk mapping protocol gebruikt moet worden. (0 voor rna, 1 voor dna).
   
-  input_format = "gzFASTQ" , 
-  # character string van het format van de inputreads (bijv. FASTQ, gzFASTQ, BAM), bepaalt hoe      de functie het bestand moet inlezen.
+  input_format = "gzFASTQ" , # character string van het format van de inputreads (bijv. FASTQ, gzFASTQ, BAM), bepaalt hoe de functie het bestand moet inlezen.
   
-  output_format = "BAM" , 
-  # character string van het format van de output (aligned reads), bepaalt in welk type bestand     (BAM/SAM) de aligner de resultaten opslaat.
+  output_format = "BAM" , # character string van het format van de output (aligned reads), bepaalt in welk type bestand (BAM/SAM) de aligner de resultaten opslaat.
   
   output_file = c(
     "liver_1.bam",
@@ -62,14 +57,12 @@ alignment_statistics <- align(
   "liver_3.bam",
   "brain_1.bam",
   "brain_2.bam",
-  "brain_3.bam") , 
-  # character vector die aangeeft wat de naam/namen van de output bestanden zijn. (standaard        afgeleid van bestandsnamen uit readfile1 met een extra suffix).
+  "brain_3.bam"
+  ) , # character vector die aangeeft wat de naam/namen van de output bestanden zijn. (standaard afgeleid van bestandsnamen uit readfile1 met een extra suffix).
   
-  unique = TRUE , 
-  # bepaalt of alleen uniek gemapte reads worden gerapporteerd. Bij TRUE worden alleen reads met     één beste mappinglocatie meegenomen, bij FALSE ook reads met meerdere mogelijke mappings.
+  unique = TRUE , # bepaalt of alleen uniek gemapte reads worden gerapporteerd. Bij TRUE worden alleen reads met één beste mappinglocatie meegenomen, bij FALSE ook reads met meerdere mogelijke mappings.
   
-  nthreads = 1 
-  # aantal CPU-kernen die tegelijk gebruikt mogen worden, meer threads = sneller alignen door       parallel werken. standaardwaarde is 1.
+  nthreads = 1 # aantal CPU-kernen die tegelijk gebruikt mogen worden, meer threads = sneller alignen door parallel werken. standaardwaarde is 1.
   
 )
 ```
