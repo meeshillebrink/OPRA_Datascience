@@ -68,6 +68,7 @@ Omdat het om RNA-seq data gaat, is type = 0 ingesteld zodat het juiste mappingpr
 
 Met unique = TRUE zijn alleen reads meegenomen die op één duidelijke plek in het genoom mappen. Reads die op meerdere locaties kunnen mappen zijn uitgesloten, zodat elke read eenduidig wordt toegewezen. De alignment statistieken zijn opgeslagen in het object alignment_statistics voor verdere analyse.
 
+Het is uitgesloten om abiquiteit (op het meerdere passen van de sequencing reads) te verminderen zodat elke read eenduidig toegewezen wordt. multi mapping reads kunnen onzzekerheid veroorzaken in de kwantificatie. van gen expressie. Aligner weet dan niet op welke plek de read echt hoort. Door uitsluitend unique gemapte reads te behouden wordt de betrouwbaarheid van downstream analyse verhoogd.
 
 ## Uitvoering van alignment
 
