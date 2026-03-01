@@ -148,17 +148,24 @@ Uit de alignment statistieken blijkt dat het percentage uniek gemapte reads vers
 ```{R}
 read_counts <- featureCounts(
   
-  files = open.srcfile() , # character vector die de naam/namen van het bestand/de bestanden met de uitgelijnde reads geeft. (BAM/SAM, bestandtype wordt automatisch gedetecteerd).
+  files = file.path( "~/project/data/bam/", c("liver_1.bam", "liver_2.bam", "liver_3.bam",
+  "brain_1.bam", "brain_2.bam", "brain_3.bam")), 
+  # character vector die de naam/namen van het bestand/de bestanden met de uitgelijnde reads geeft. (BAM/SAM, bestandtype wordt automatisch gedetecteerd).
   
-  annot.inbuilt =  , # character string die aangeeft welke ingebouwde genannotatie wordt gebruikt bij het samenvatten van reads. De waarde bepaalt voor welk organisme en genoomversie de annotatie geldt, met mm39 als standaard. In het geval van deze analyse wordt hg38 gebruikt.
+  annot.inbuilt =  "hg38", 
+  # character string die aangeeft welke ingebouwde genannotatie wordt gebruikt bij het samenvatten van reads. De waarde bepaalt voor welk organisme en genoomversie de annotatie geldt, met mm39 als standaard. In het geval van deze analyse wordt hg38 gebruikt.
   
-  useMetaFeatures = ............... , # indicator voor op welk niveau reads worden samengevat. Bij TRUE gebeurt dit op meta-feature niveau zoals genen, bij FALSE op feature-niveau zoals exons. In het geval van deze analyse is het TRUE.
+  useMetaFeatures = T , 
+  # indicator voor op welk niveau reads worden samengevat. Bij TRUE gebeurt dit op meta-feature niveau zoals genen, bij FALSE op feature-niveau zoals exons. In het geval van deze analyse is het TRUE.
   
-  strandSpecific = ............... , # Integer vector die bepaalt of en hoe rekening wordt gehouden met de strandrichting bij het tellen van reads. Waarde 0 betekent geen strand-specifieke telling, 1 telt reads in dezelfde richting als de annotatie en 2 in de omgekeerde richting. Standaard wordt 0 gebruikt.
+  strandSpecific = 0 , 
+  # Integer vector die bepaalt of en hoe rekening wordt gehouden met de strandrichting bij het tellen van reads. Waarde 0 betekent geen strand-specifieke telling, 1 telt reads in dezelfde richting als de annotatie en 2 in de omgekeerde richting. Standaard wordt 0 gebruikt.
   
-  isPairedEnd = ............... , # logical vector die aangeeft of de gebruikte libraries paired-end reads bevatten. FALSE betekent single-end data. Deze instelling bepaalt samen met countReadPairs of reads per paar of afzonderlijk worden geteld.
+  isPairedEnd = F ,
+  # logical vector die aangeeft of de gebruikte libraries paired-end reads bevatten. FALSE betekent single-end data. Deze instelling bepaalt samen met countReadPairs of reads per paar of afzonderlijk worden geteld.
   
-  nthreads = ............... # aantal CPU-kernen die tegelijk gebruikt mogen worden, meer threads = sneller alignen door parallel werken. standaardwaarde is 1.
+  nthreads = 30 
+  # aantal CPU-kernen die tegelijk gebruikt mogen worden, meer threads = sneller alignen door parallel werken. standaardwaarde is 1.
 )
 ```
 
