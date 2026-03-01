@@ -16,6 +16,7 @@ library(tidyverse)
 library(Rsubread)
 library(DESeq2)
 library(GOstats)
+library(pheatmap)
 ```
 
 --------------------------------------------------------------------------------
@@ -169,15 +170,56 @@ read_counts <- featureCounts(
 )
 ```
 
+# data inspectie
+
+```{r}
+count_mat <- read_counts$counts
+storage.mode(count_mat) <- "integer"
+
+coldata <- data.frame(
+  tissue = c("liver","liver","liver","brain","brain","brain"),
+  row.names = colnames(count_mat)
+)
+
+dds <- DESeqDataSetFromMatrix(
+  countData = count_mat,
+  colData   = coldata,
+  design    = ~ tissue
+)
+
+```
+
+```{r}
+vsd <- vst(dds, blind = FALSE)
+
+plotPCA(vsd, intgroup = "tissue") +
+  labs(color = "Tissue")
+
+vsd_mat <- assay(vsd)
+cor_mat <- cor(vsd_mat)
+
+annotation <- data.frame(tissue = colData(dds)$tissue)
+rownames(annotation) <- colnames(vsd_mat)
+
+pheatmap(
+  cor_mat,
+  annotation_col = annotation,
+  annotation_row = annotation,
+  main = "Sample-to-sample correlation heatmap",
+  angle_col = 45
+)
+```
+
 --------------------------------------------------------------------------------
 
 # DGE analyse
+
 
 ```{r, eval=TRUE}
 # uitvoeren van de DESeq2 analyse, waarbij size factors en dispersies worden geschat en een negatief binomiaal model wordt toegepast op de ruwe countdata
 dge <- DESeq(
     
-    object = ............... , # het DESeqDataSet object dat de input vormt voor de DESeq2 analyse.
+    object = dds , # het DESeqDataSet object dat de input vormt voor de DESeq2 analyse.
 )
 ```
 
