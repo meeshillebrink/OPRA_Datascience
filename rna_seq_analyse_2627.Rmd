@@ -28,7 +28,7 @@ Om deze vraag te beantwoorden wordt RNA-seq data geanalyseerd. De reads worden u
 
 <br>
 
-```{R}
+```{R folder_prep}
 # deze code zorgt ervoor dat er een standaard folder gemaakt word die gebruikt kan worden voor alle code zodat alle data altijd op de juiste plek zit. verder doet download de code ook meteen alle files die gebruikt worden zodat je dat zelf ook niet hoeft te doen.
 
 project_dir <- file.path(Sys.getenv("HOME"), "project")
@@ -73,7 +73,7 @@ Het is uitgesloten om abiquiteit (op het meerdere passen van de sequencing reads
 
 ## Uitvoering van alignment
 
-```{R}
+```{R alignment}
 alignment_statistics <- align(
   
   index = "~/project/index/hg38_index/hg38_index" , 
@@ -106,7 +106,7 @@ alignment_statistics <- align(
  
 ## Analyse van de alignment statistieken
 
-```{r fig.cap="Figuur 1: Uniek gemapte reads per BAM bestand voor brein- en lever weefsel."}
+```{R fig.cap="Figuur 1: Uniek gemapte reads per BAM bestand voor brein- en lever weefsel."}
 # berekenen van het percentage uniquely mapped reads per BAM file
 unique_reads <- alignment_statistics["Uniquely_mapped_reads", ]
 total_reads <- alignment_statistics["Total_reads", ]
@@ -146,7 +146,13 @@ Uit de alignment statistieken blijkt dat het percentage uniek gemapte reads vers
 
 # Count tabel en data inspectie
 
-```{R}
+In deze stap worden de uitgelijnde BAM-bestanden samengevat om te bepalen hoeveel reads per gen zijn gemapt. Hiervoor gebruiken we de functie featureCounts uit het pakket Rsubread, in combinatie met de ingebouwde NCBI hg38 RefSeq annotatie.
+
+De tellingen worden uitgevoerd op gen-niveau (niet op transcript-niveau). Dit betekent dat reads die overlappen met exonen van hetzelfde gen worden samengevoegd tot één totaal aantal reads per gen per sample.
+
+De resulterende counttabel vormt de basis voor de verdere differentiële genexpressieanalyse met DESeq2.
+
+```{R count_tabel, include=F}
 read_counts <- featureCounts(
   
   files = file.path( "~/project/data/bam/", c("liver_1.bam", "liver_2.bam", "liver_3.bam",
@@ -172,15 +178,24 @@ read_counts <- featureCounts(
 
 # data inspectie
 
-```{r}
+```{R prep, include=F}
+# Stap 1: Extractie van de gen-niveau countmatrix uit featureCounts
 count_mat <- read_counts$counts
+
+# DESeq2 vereist gehele getallen (integer counts)
 storage.mode(count_mat) <- "integer"
 
+# Stap 2: Aanmaken van metadata (colData)
+# Hier geven we per sample aan van welk weefsel het afkomstig is.
+# De volgorde moet exact overeenkomen met de kolommen van count_mat.
 coldata <- data.frame(
   tissue = c("liver","liver","liver","brain","brain","brain"),
   row.names = colnames(count_mat)
 )
 
+# Stap 3: Aanmaken van het DESeqDataSet object
+# design = ~ tissue betekent dat we verschillen in genexpressie
+# willen testen op basis van het type weefsel.
 dds <- DESeqDataSetFromMatrix(
   countData = count_mat,
   colData   = coldata,
@@ -189,33 +204,100 @@ dds <- DESeqDataSetFromMatrix(
 
 ```
 
-```{r}
+```{R pca_plot, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Figuur 2. PCA van de VST-getransformeerde genexpressiewaarden, waarbij samples zijn gekleurd op basis van weefseltype.", fig.width=8, fig.height=6}
+
+# Variance Stabilizing Transformation (VST)
+# Normaliseert de data voor visualisatie
+# Stap 1: Variance Stabilizing Transformation (VST)
+# We passen VST toe zodat de expressiewaarden beter vergelijkbaar zijn tussen samples
+# (variatie wordt gestabiliseerd; geschikt voor PCA/heatmap).
 vsd <- vst(dds, blind = FALSE)
 
+# Stap 2: PCA-plot maken
+# plotPCA gebruikt standaard de 500 genen met de hoogste variantie.
+# 'intgroup = "tissue"' zorgt ervoor dat samples worden gekleurd op basis van weefseltype.
 plotPCA(vsd, intgroup = "tissue") +
-  labs(color = "Tissue")
+  labs(
+    color = "Tissue",  # naam van de legenda
+    title = "Principal Component Analyse (PCA) van VST-getransformeerde genexpressiewaarden"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.4, size = 14, face = "bold") 
+    # titel gecentreerd en opgemaakt
+  )
+```
+Figuur 2. Principal Component Analysis (PCA) van de VST-getransformeerde genexpressiewaarden. PC1 verklaart 93% van de totale variatie en scheidt de lever- en hersensamples duidelijk van elkaar. De samples zijn gekleurd op basis van het type weefsel.
 
+De PCA-plot toont een duidelijke clustering van de samples op basis van weefseltype. Lever- en hersensamples bevinden zich aan tegenovergestelde zijden van de PC1-as, wat aangeeft dat het grootste deel van de variatie in genexpressie wordt bepaald door het weefsel. De replicaten binnen elk weefsel clusteren dicht bij elkaar, wat duidt op consistente biologische metingen en beperkte intra-groep variatie. Er zijn geen duidelijke outliers zichtbaar, wat wijst op goede datakwaliteit.
+
+
+```{R heatmap_plot, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Figuur 3. Heatmap van de correlatiematrix tussen de samples op basis van VST-getransformeerde genexpressiewaarden.", fig.width=8, fig.height=6}
+
+# Stap 1: Extractie van de getransformeerde expressiewaarden
+# assay(vsd) bevat de VST-genormaliseerde expressiewaarden per gen per sample.
 vsd_mat <- assay(vsd)
+
+
+# Stap 2: Berekenen van de correlatiematrix
+# cor() berekent de Pearson-correlatie tussen alle samples.
+# Elke cel in de matrix geeft de correlatie tussen twee samples weer.
 cor_mat <- cor(vsd_mat)
 
+
+# Stap 3: Aanmaken van het annotatie-object
+# Dit object koppelt elk sample aan het bijbehorende weefseltype.
+# Deze informatie wordt gebruikt om de heatmap visueel te annoteren.
 annotation <- data.frame(tissue = colData(dds)$tissue)
 rownames(annotation) <- colnames(vsd_mat)
 
+
+# Stap 4: Definiëren van het kleurenschema voor de weefsel-annotatie
+# Hier kiezen we vaste kleuren voor lever en hersenen.
+# Deze kleuren staan los van de correlatiekleurschaal.
+ann_colors <- list(
+  tissue = c(
+    liver = "#2A9D8F",   # groen
+    brain = "#FFD166"    # geel
+  )
+)
+
+
+# Stap 5: Visualisatie van de correlatiematrix met pheatmap
+# - Warme kleuren (rood) = hoge correlatie
+# - Koele kleuren (blauw) = lagere correlatie
+# - Dendrogram toont hiërarchische clustering van samples
 pheatmap(
   cor_mat,
   annotation_col = annotation,
   annotation_row = annotation,
-  main = "Sample-to-sample correlation heatmap",
-  angle_col = 45
+  annotation_colors = ann_colors,
+  main = "Heatmap van sample-correlaties per weefsel",
+  angle_col = 45,
+  color = colorRampPalette(c("#2c7bb6", "white", "#d7191c"))(100),
+  fontsize = 12,
+  fontsize_row = 10,
+  fontsize_col = 10,
+  fontsize_main = 14
 )
 ```
+Figuur 3. Heatmap van de correlatiematrix tussen alle samples op basis van VST-getransformeerde genexpressiewaarden. Warme kleuren (rood/geel) geven een hoge correlatie weer, terwijl koelere kleuren (blauw) een lagere correlatie aanduiden.
+
+De heatmap bevestigt het patroon dat in de PCA werd waargenomen. Samples afkomstig van hetzelfde weefsel vertonen een hoge onderlinge correlatie, terwijl de correlatie tussen lever- en hersensamples duidelijk lager is. De hiërarchische clustering groepeert de samples in twee hoofdtakken die overeenkomen met het weefseltype. Dit ondersteunt dat het weefseltype de dominante factor is in de dataset en dat de replicaten binnen elke groep consistent zijn.
+
+# conclusie
+
+De uitgevoerde PCA-analyse toont een duidelijke scheiding tussen de lever- en hersensamples. De eerste principale component (PC1) verklaart 93% van de totale variatie in de dataset. Dit betekent dat het grootste deel van de variatie in genexpressie wordt bepaald door het type weefsel. Lever- en hersensamples bevinden zich aan tegenovergestelde zijden van de PC1-as, wat wijst op substantiële biologische verschillen tussen deze twee weefsels.
+
+Daarnaast clusteren de biologische replicaten binnen elk weefsel dicht bij elkaar. Dit suggereert dat de variatie binnen een weefselgroep beperkt is en dat de metingen reproduceerbaar zijn. Er zijn geen duidelijke outliers zichtbaar in de PCA-plot, wat een indicatie is van consistente sequencingkwaliteit en betrouwbare data.
+
+De heatmap van de correlatiematrix bevestigt deze bevindingen. Samples afkomstig van hetzelfde weefsel vertonen een hoge onderlinge correlatie (warme kleuren), terwijl de correlatie tussen lever- en hersensamples duidelijk lager is (koelere kleuren). De hiërarchische clustering groepeert de samples in twee hoofdtakken die overeenkomen met het weefseltype. Dit ondersteunt opnieuw dat het weefseltype de dominante factor is in de dataset.
 
 --------------------------------------------------------------------------------
 
 # DGE analyse
 
 
-```{r, eval=TRUE}
+```{R, eval=TRUE}
 # uitvoeren van de DESeq2 analyse, waarbij size factors en dispersies worden geschat en een negatief binomiaal model wordt toegepast op de ruwe countdata
 dge <- DESeq(
     
@@ -227,7 +309,7 @@ dge <- DESeq(
 
 # GO-term analyse
 
-```{r, eval=TRUE}
+```{R, eval=TRUE}
 test_object <- new(
     
     "GOHyperGParams",
