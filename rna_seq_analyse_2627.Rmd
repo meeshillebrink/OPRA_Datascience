@@ -123,6 +123,11 @@ alignment_df <- data.frame(
   Tissue = tissue
 )
   
+tissue_colors <- c(
+  Brein = "#FFD166", #geel
+  Lever = "#2A9D8F"  #groen
+)
+
 # maken van de staafdiagram
 bam_staafdiagram <- ggplot(alignment_df, aes(x = BAM, y = PercentUnique, fill = Tissue)) +
   geom_col() +
@@ -132,6 +137,7 @@ bam_staafdiagram <- ggplot(alignment_df, aes(x = BAM, y = PercentUnique, fill = 
     y = "Percentage uniek gemapte reads (%)",
     fill = "Weefsel"
   ) +
+  scale_fill_manual(values = tissue_colors) +
   theme_minimal() 
 
 bam_staafdiagram
@@ -222,8 +228,8 @@ plotPCA(vsd, intgroup = "tissue") +
     title = "Principal Component Analyse (PCA) van VST-getransformeerde genexpressiewaarden"
   ) +
   scale_color_manual(values = c(
-    liver = "#2A9D8F", #groen
-    brain = "#FFD166"  #geel
+    brain = "#FFD166", #geel
+    liver = "#2A9D8F"  #groen
   )) +
   theme(
     plot.title = element_text(hjust = 0.4, size = 14, face = "bold")
@@ -236,39 +242,49 @@ De PCA-plot toont een duidelijke clustering van de samples op basis van weefselt
 
 ```{R heatmap_plot, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Figuur 3. Heatmap van de correlatiematrix tussen de samples op basis van VST-getransformeerde genexpressiewaarden.", fig.width=8, fig.height=6}
 
-# Stap 1: Extractie van de getransformeerde expressiewaarden
-# assay(vsd) bevat de VST-genormaliseerde expressiewaarden per gen per sample.
+# Stap 1: Extractie van de VST-getransformeerde expressiewaarden
+# assay(vsd) bevat de genexpressiematrix na variance stabilizing transformation.
+# Deze matrix wordt gebruikt voor visualisatie (niet voor DGE zelf).
 vsd_mat <- assay(vsd)
 
-
-# Stap 2: Berekenen van de correlatiematrix
-# cor() berekent de Pearson-correlatie tussen alle samples.
-# Elke cel in de matrix geeft de correlatie tussen twee samples weer.
+# Stap 2: Berekenen van de Pearson correlatiematrix
+# cor() berekent de correlatie tussen alle samples.
+# Elke cel in cor_mat geeft de correlatie tussen twee samples weer.
 cor_mat <- cor(vsd_mat)
 
-
-# Stap 3: Aanmaken van het annotatie-object
-# Dit object koppelt elk sample aan het bijbehorende weefseltype.
-# Deze informatie wordt gebruikt om de heatmap visueel te annoteren.
-annotation <- data.frame(tissue = colData(dds)$tissue)
-rownames(annotation) <- colnames(vsd_mat)
-
-
-# Stap 4: Definiëren van het kleurenschema voor de weefsel-annotatie
-# Hier kiezen we vaste kleuren voor lever en hersenen.
-# Deze kleuren staan los van de correlatiekleurschaal.
-ann_colors <- list(
-  tissue = c(
-    liver = "#2A9D8F",   # groen
-    brain = "#FFD166"    # geel
+# Stap 3: Aanmaken van een annotatie-object voor de heatmap
+# Hier koppelen we elk sample aan het bijbehorende weefseltype.
+# We halen de informatie direct uit de kolomnamen van de correlatiematrix
+# zodat de annotatie exact overeenkomt met de matrix (voorkomt NA-problemen).
+annotation <- data.frame(
+  tissue = ifelse(
+    grepl("^brain", colnames(cor_mat), ignore.case = TRUE),
+    "Brein",
+    "Lever"
   )
 )
 
+# Zorg ervoor dat de rijnamen exact overeenkomen met de matrix
+rownames(annotation) <- colnames(cor_mat)
+
+# Zet het weefseltype om naar een factor en bepaal expliciet de volgorde
+# Dit bepaalt ook de volgorde in de legenda.
+annotation$tissue <- factor(annotation$tissue,
+                             levels = c("Brein", "Lever"))
+
+# Stap 4: Definiëren van vaste kleuren voor de weefselannotatie
+# Deze kleuren staan los van de correlatiekleuren.
+ann_colors <- list(
+  tissue = c(
+    Brein = "#FFD166",  # geel
+    Lever = "#009E73"   # groen
+  )
+)
 
 # Stap 5: Visualisatie van de correlatiematrix met pheatmap
 # - Warme kleuren (rood) = hoge correlatie
 # - Koele kleuren (blauw) = lagere correlatie
-# - Dendrogram toont hiërarchische clustering van samples
+# - Dendrogrammen tonen hiërarchische clustering van samples
 pheatmap(
   cor_mat,
   annotation_col = annotation,
@@ -276,11 +292,7 @@ pheatmap(
   annotation_colors = ann_colors,
   main = "Heatmap van sample-correlaties per weefsel",
   angle_col = 45,
-  color = colorRampPalette(c("#2c7bb6", "white", "#d7191c"))(100),
-  fontsize = 12,
-  fontsize_row = 10,
-  fontsize_col = 10,
-  fontsize_main = 14
+  color = colorRampPalette(c("#2c7bb6", "white", "#d7191c"))(100)
 )
 ```
 Figuur 3. Heatmap van de correlatiematrix tussen alle samples op basis van VST-getransformeerde genexpressiewaarden. Warme kleuren (rood/geel) geven een hoge correlatie weer, terwijl koelere kleuren (blauw) een lagere correlatie aanduiden.
