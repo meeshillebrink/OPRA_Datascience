@@ -218,12 +218,15 @@ vsd <- vst(dds, blind = FALSE)
 # 'intgroup = "tissue"' zorgt ervoor dat samples worden gekleurd op basis van weefseltype.
 plotPCA(vsd, intgroup = "tissue") +
   labs(
-    color = "Tissue",  # naam van de legenda
+    color = "Weefsel",
     title = "Principal Component Analyse (PCA) van VST-getransformeerde genexpressiewaarden"
   ) +
+  scale_color_manual(values = c(
+    liver = "#2A9D8F", #groen
+    brain = "#FFD166"  #geel
+  )) +
   theme(
-    plot.title = element_text(hjust = 0.4, size = 14, face = "bold") 
-    # titel gecentreerd en opgemaakt
+    plot.title = element_text(hjust = 0.4, size = 14, face = "bold")
   )
 ```
 Figuur 2. Principal Component Analysis (PCA) van de VST-getransformeerde genexpressiewaarden. PC1 verklaart 93% van de totale variatie en scheidt de lever- en hersensamples duidelijk van elkaar. De samples zijn gekleurd op basis van het type weefsel.
