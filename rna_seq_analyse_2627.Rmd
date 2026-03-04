@@ -8,7 +8,7 @@ output: html_document
 ## Setup
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+knitr::opts_chunk$set(echo = FALSE, eval = FALSE)
 ```
 
 ```{r, eval=TRUE, warning=FALSE, message=FALSE}
@@ -28,7 +28,7 @@ Om deze vraag te beantwoorden wordt RNA-seq data geanalyseerd. De reads worden u
 
 <br>
 
-```{R}
+```{r}
 # deze code zorgt ervoor dat er een standaard folder gemaakt word die gebruikt kan worden voor alle code zodat alle data altijd op de juiste plek zit. verder doet download de code ook meteen alle files die gebruikt worden zodat je dat zelf ook niet hoeft te doen.
 
 project_dir <- file.path(Sys.getenv("HOME"), "project")
@@ -73,7 +73,7 @@ Het is uitgesloten om abiquiteit (op het meerdere passen van de sequencing reads
 
 ## Uitvoering van alignment
 
-```{R}
+```{r}
 alignment_statistics <- align(
   
   index = "~/project/index/hg38_index/hg38_index" , 
@@ -159,7 +159,7 @@ Uit de alignment statistieken blijkt dat het percentage uniek gemapte reads vers
 
 ## Genereren van count table
 
-```{R}
+```{r}
 # Genereren van een count-table
 read_counts <- featureCounts(
   
