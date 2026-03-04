@@ -426,7 +426,7 @@ kunnen worden.</p>
 ## ||                                                                            ||
 ## \\============================================================================//
 ## 
-## //================ Running (04-Mar-2026 15:59:26, pid=298147) ================\\
+## //================ Running (04-Mar-2026 16:13:35, pid=305198) ================\\
 ## ||                                                                            ||
 ## || Check the input reads.                                                     ||
 ## || The input file contains base space reads.                                  ||
@@ -465,7 +465,7 @@ kunnen worden.</p>
 ## ||                                                                            ||
 ## \\============================================================================//
 ## 
-## //================ Running (04-Mar-2026 15:59:26, pid=298147) ================\\
+## //================ Running (04-Mar-2026 16:13:35, pid=305198) ================\\
 ## ||                                                                            ||
 ## || Check the input reads.                                                     ||
 ## || The input file contains base space reads.                                  ||
@@ -504,7 +504,7 @@ kunnen worden.</p>
 ## ||                                                                            ||
 ## \\============================================================================//
 ## 
-## //================ Running (04-Mar-2026 15:59:26, pid=298147) ================\\
+## //================ Running (04-Mar-2026 16:13:35, pid=305198) ================\\
 ## ||                                                                            ||
 ## || Check the input reads.                                                     ||
 ## || The input file contains base space reads.                                  ||
@@ -543,7 +543,7 @@ kunnen worden.</p>
 ## ||                                                                            ||
 ## \\============================================================================//
 ## 
-## //================ Running (04-Mar-2026 15:59:26, pid=298147) ================\\
+## //================ Running (04-Mar-2026 16:13:35, pid=305198) ================\\
 ## ||                                                                            ||
 ## || Check the input reads.                                                     ||
 ## || The input file contains base space reads.                                  ||
@@ -582,7 +582,7 @@ kunnen worden.</p>
 ## ||                                                                            ||
 ## \\============================================================================//
 ## 
-## //================ Running (04-Mar-2026 15:59:27, pid=298147) ================\\
+## //================ Running (04-Mar-2026 16:13:35, pid=305198) ================\\
 ## ||                                                                            ||
 ## || Check the input reads.                                                     ||
 ## || The input file contains base space reads.                                  ||
@@ -621,7 +621,7 @@ kunnen worden.</p>
 ## ||                                                                            ||
 ## \\============================================================================//
 ## 
-## //================ Running (04-Mar-2026 15:59:27, pid=298147) ================\\
+## //================ Running (04-Mar-2026 16:13:35, pid=305198) ================\\
 ## ||                                                                            ||
 ## || Check the input reads.                                                     ||
 ## || The input file contains base space reads.                                  ||
@@ -658,10 +658,38 @@ hebben een duidelijk lager percentage dan andere.</p>
 </div>
 <div id="count-tabel-en-data-inspectie" class="section level1">
 <h1>Count tabel en data inspectie</h1>
-<div id="korte-toelichting-voor-de-analyses-en-verantwoord-de-gebruikte-r-code" class="section level3">
-<h3>korte toelichting voor de analyses en verantwoord de gebruikte R
-code</h3>
-</div>
+<p>Voor het genereren van de count table zijn de zes BAM-bestanden van
+lever- en breinsamples geanalyseerd met de functie featureCounts() uit
+het Rsubread pakket, waarbij gebruik is gemaakt van de ingebouwde hg38
+RefSeq annotatie. Er is gekozen voor useMetaFeatures = TRUE zodat reads
+op genniveau worden samengevoegd, wat aansluit bij het doel om
+genexpressie tussen weefsels te vergelijken. De parameter strandSpecific
+= 0 is ingesteld omdat de libraries niet streng strand-specifiek zijn
+voorbereid, waardoor reads van beide DNA-strengen mogen worden
+meegeteld. Daarnaast is isPairedEnd = FALSE gebruikt omdat de data uit
+single-end sequencing bestaat. Door meerdere threads te gebruiken is de
+telling efficiënt uitgevoerd.</p>
+<p>De verkregen countmatrix is vervolgens omgezet naar een DESeqDataSet,
+waarbij in de metadata per sample is vastgelegd of deze afkomstig is van
+lever- of breinweefsel. In het design is ~ weefsel opgenomen, zodat
+specifiek het verschil tussen deze twee weefsels wordt getest.</p>
+<p>Voor de data-inspectie is gekozen voor een variance stabilizing
+transformatie (vst) in plaats van een eenvoudige log-transformatie. Een
+log-transformatie corrigeert wel voor grote verschillen in schaal, maar
+houdt onvoldoende rekening met de mean-variance relatie die kenmerkend
+is voor RNA-seq data. De vst-methode stabiliseert de variantie over het
+hele bereik van expressiewaarden en maakt lage en hoge expressieniveaus
+beter vergelijkbaar. Hierdoor is de data geschikter voor multivariate
+analyses zoals PCA en correlatieanalyse.</p>
+<p>De PCA is uitgevoerd om te beoordelen of samples van hetzelfde
+weefsel bij elkaar clusteren en of er een duidelijke scheiding zichtbaar
+is tussen lever en brein. Daarnaast is een correlatiematrix berekend met
+de functie cor() op de vst-getransformeerde waarden en gevisualiseerd
+met pheatmap(). Hiermee kan worden gecontroleerd of replicaten binnen
+hetzelfde weefsel sterk correleren en of de globale expressiepatronen
+consistent zijn. Deze stappen dienen als kwaliteitscontrole en
+onderbouwing voor de betrouwbaarheid van de verdere differentiële
+expressieanalyse.</p>
 <div id="genereren-van-count-table" class="section level2">
 <h2>Genereren van count table</h2>
 <pre><code>## NCBI RefSeq annotation for hg38 (build 38.2) is used.
@@ -689,7 +717,7 @@ code</h3>
 ## ||        Count read pairs : no                                               ||
 ## ||              Annotation : inbuilt (hg38)                                   ||
 ## ||      Dir for temp files : .                                                ||
-## ||                 Threads : 30                                               ||
+## ||                 Threads : 2                                                ||
 ## ||                   Level : meta-feature level                               ||
 ## ||      Multimapping reads : counted                                          ||
 ## || Multi-overlapping reads : not counted                                      ||
@@ -708,37 +736,37 @@ code</h3>
 ## ||    Single-end reads are included.                                          ||
 ## ||    Total alignments : 14940927                                             ||
 ## ||    Successfully assigned alignments : 4360663 (29.2%)                      ||
-## ||    Running time : 0.02 minutes                                             ||
+## ||    Running time : 0.13 minutes                                             ||
 ## ||                                                                            ||
 ## || Process BAM file liver_2.bam...                                            ||
 ## ||    Single-end reads are included.                                          ||
 ## ||    Total alignments : 13824967                                             ||
 ## ||    Successfully assigned alignments : 6193056 (44.8%)                      ||
-## ||    Running time : 0.02 minutes                                             ||
+## ||    Running time : 0.13 minutes                                             ||
 ## ||                                                                            ||
 ## || Process BAM file liver_3.bam...                                            ||
 ## ||    Single-end reads are included.                                          ||
 ## ||    Total alignments : 15602576                                             ||
 ## ||    Successfully assigned alignments : 6963683 (44.6%)                      ||
-## ||    Running time : 0.02 minutes                                             ||
+## ||    Running time : 0.15 minutes                                             ||
 ## ||                                                                            ||
 ## || Process BAM file brain_1.bam...                                            ||
 ## ||    Single-end reads are included.                                          ||
 ## ||    Total alignments : 16278845                                             ||
 ## ||    Successfully assigned alignments : 6479171 (39.8%)                      ||
-## ||    Running time : 0.02 minutes                                             ||
+## ||    Running time : 0.15 minutes                                             ||
 ## ||                                                                            ||
 ## || Process BAM file brain_2.bam...                                            ||
 ## ||    Single-end reads are included.                                          ||
 ## ||    Total alignments : 20100959                                             ||
 ## ||    Successfully assigned alignments : 3530325 (17.6%)                      ||
-## ||    Running time : 0.02 minutes                                             ||
+## ||    Running time : 0.16 minutes                                             ||
 ## ||                                                                            ||
 ## || Process BAM file brain_3.bam...                                            ||
 ## ||    Single-end reads are included.                                          ||
 ## ||    Total alignments : 15368537                                             ||
 ## ||    Successfully assigned alignments : 4547113 (29.6%)                      ||
-## ||    Running time : 0.02 minutes                                             ||
+## ||    Running time : 0.14 minutes                                             ||
 ## ||                                                                            ||
 ## || Write the final count table.                                               ||
 ## || Write the read assignment summary.                                         ||
