@@ -136,9 +136,7 @@ Uit de alignment statistieken blijkt dat het percentage uniek gemapte reads vers
 
 ```{r}
 # Genereren van een count-table
-read_counts <- suppressMessages(
-  suppressWarnings(
-    featureCounts(
+read_counts <- featureCounts(
       
       files = file.path("aligned_bam", c(
         "liver_1.bam", "liver_2.bam", "liver_3.bam",
@@ -221,7 +219,6 @@ ggplot(pca_plotting, aes(x = PC1, y = PC2)) +
     plot.title = element_text(hjust = 0.5, face = "bold"),
     text = element_text(size = 14)
   )
-
 ```
 
 
