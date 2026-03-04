@@ -228,6 +228,7 @@ ggplot(pca_plotting, aes(x = PC1, y = PC2)) +
   )
 ```
 
+Figuur 2 toont het PCA-plot die een duidelijke scheiding laat zien tussen lever- en breinsamples. De leversamples (geel) liggen links in de grafiek en clusteren dicht bij elkaar, terwijl de breinsamples (groen) rechts liggen en eveneens een aparte cluster vormen. PC1 verklaart het grootste deel van de variantie en scheidt de twee weefsels duidelijk van elkaar.
 
 ```{r fig.cap="Correlatieheatmap van de vst-getransformeerde expressiewaarden."}
 
@@ -268,8 +269,15 @@ pheatmap(
 )
 ```
 
+De correlatieheatmap in figuur 3 toont dat de drie leversamples onderling een hoge correlatie hebben en samen clusteren, terwijl de drie breinsamples eveneens sterk met elkaar correleren en een aparte cluster vormen. De correlatie tussen lever- en breinsamples is duidelijk lager. De dendrogrammen laten zien dat de samples zich groeperen op basis van weefseltype.
+
+<br>
 
 ## Conclusie van de correlatieheatmap en PCA
+
+Uit de correlatieheatmap blijkt dat replicaten van hetzelfde weefsel sterk met elkaar correleren, terwijl de correlatie tussen lever- en breinsamples duidelijk lager is. Dit wijst op consistente expressiepatronen binnen elk weefsel en duidelijke biologische verschillen tussen de twee weefsels.
+
+De PCA bevestigt dit patroon. De samples clusteren op basis van weefseltype, waarbij lever- en breinsamples duidelijk van elkaar gescheiden zijn langs PC1. Aangezien PC1 meer dan de helft van de totale variantie verklaart, kan worden geconcludeerd dat het grootste deel van de variatie in de dataset wordt bepaald door het verschil tussen lever- en breinweefsel.
 
 # Conclusie
 
