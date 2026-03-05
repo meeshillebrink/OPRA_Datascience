@@ -40,7 +40,7 @@ Het is uitgesloten om abiquiteit (op het meerdere passen van de sequencing reads
 
 ## Uitvoering van alignment
 
-```{R aligment}
+```{R aligment, include = FALSE}
 alignment_statistics <- align(
   
   index = "/home/data/opra4v/hg38_index/hg38_index" , 
@@ -81,7 +81,7 @@ readfile1 = file.path(
  
 ## Analyse van de alignment statistieken
 
-```{R graffiek, echo = FALSE}
+```{R graffiek, echo = FALSE, message=FALSE, warning=FALSE}
 # berekenen van het percentage uniquely mapped reads per BAM file
 unique_reads <- alignment_statistics["Uniquely_mapped_reads", ]
 total_reads <- alignment_statistics["Total_reads", ]
