@@ -11,7 +11,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE)
 ```
 
-```{R librarys, eval=TRUE, warning=FALSE, message=FALSE}
+```{R librarys, eval=TRUE, warning=FALSE, message=FALSE, include = FALSE}
 library(tidyverse)
 library(Rsubread)
 library(DESeq2)
@@ -81,7 +81,7 @@ readfile1 = file.path(
  
 ## Analyse van de alignment statistieken
 
-```{R graffiek}
+```{R graffiek, echo = FALSE}
 # berekenen van het percentage uniquely mapped reads per BAM file
 unique_reads <- alignment_statistics["Uniquely_mapped_reads", ]
 total_reads <- alignment_statistics["Total_reads", ]
@@ -119,7 +119,7 @@ bam_staafdiagram
 ```
 In figuur 1 zijn per BAM bestand het percentage uniek gemapte reads te zien. Hierbij valt op dat de percentages tussen de twee weefsels verschillen. De levermonsters laten waarden zien tussen ongeveer 49% en 78%, terwijl de hersenmonsters waarden laten zien tussen ongeveer 28% tot 66%. Daarnaast is binnen beide weefseltypes spreiding tussen replicaten zichtbaar.
 
-## Conclusie van de alignmentstatistieken
+# Conclusie van de alignmentstatistieken
 
 Uit de alignment statistieken blijkt dat het percentage uniek gemapte reads verschilt tussen de verschillende BAM-bestanden. Zowel binnen de lever- als de breinmonsters is spreiding zichtbaar. Een paar samples hebben een duidelijk lager percentage dan andere. Dit laat zien dat de alignmentkwaliteit niet voor alle monsters gelijk is.
 
