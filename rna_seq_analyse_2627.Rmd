@@ -19,7 +19,6 @@ library(GOstats)
 library(pheatmap)
 ```
 
---------------------------------------------------------------------------------
 # Introductie
 
 In dit project wordt onderzocht welke genen verschillend tot expressie komen tussen hersenweefsel en leverweefsel. De onderzoeksvraag luidt: welke verschillen in genexpressie zijn aanwezig tussen hersen- en leverweefsel en welke biologische processen hangen hiermee samen?
@@ -123,7 +122,6 @@ In figuur 1 zijn per BAM bestand het percentage uniek gemapte reads te zien. Hie
 
 Uit de alignment statistieken blijkt dat het percentage uniek gemapte reads verschilt tussen de verschillende BAM-bestanden. Zowel binnen de lever- als de breinmonsters is spreiding zichtbaar. Een paar samples hebben een duidelijk lager percentage dan andere. Dit laat zien dat de alignmentkwaliteit niet voor alle monsters gelijk is.
 
---------------------------------------------------------------------------------
 
 # Count tabel en data inspectie
 
@@ -282,7 +280,6 @@ Daarnaast clusteren de biologische replicaten binnen elk weefsel dicht bij elkaa
 
 De heatmap van de correlatiematrix bevestigt deze bevindingen. Samples afkomstig van hetzelfde weefsel vertonen een hoge onderlinge correlatie (warme kleuren), terwijl de correlatie tussen lever- en hersensamples duidelijk lager is (koelere kleuren). De hiërarchische clustering groepeert de samples in twee hoofdtakken die overeenkomen met het weefseltype. Dit ondersteunt opnieuw dat het weefseltype de dominante factor is in de dataset.
 
---------------------------------------------------------------------------------
 
 # DGE analyse
 
@@ -295,7 +292,6 @@ dge <- DESeq(
 )
 ```
 
---------------------------------------------------------------------------------
 
 # GO-term analyse
 
