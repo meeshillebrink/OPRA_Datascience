@@ -1,0 +1,114 @@
+---
+title: "Analyse van RNA seq Data"
+author: "Groep_1"
+date: "2026-03-04"
+output: html_document
+  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,eval=TRUE,message=FALSE,warning=FALSE)
+```
+
+## Introductie
+In dit project wordt onderzocht welke genen verschillend tot expressie komen tussen hersenweefsel en leverweefsel. De onderzoeksvraag luidt: welke verschillen in genexpressie zijn aanwezig tussen hersen- en leverweefsel en welke biologische processen hangen hiermee samen?
+
+Om deze vraag te beantwoorden wordt RNA-seq data geanalyseerd. De reads worden uitgelijnd tegen een referentiegenoom en samengevat in een counttabel, waarna een differentiële genexpressieanalyse wordt uitgevoerd. Vervolgens wordt een GO-term enrichment analyse toegepast om inzicht te krijgen in de biologische functies en processen die samenhangen met de gevonden expressieverschillen.
+##Alignment
+Voor de alignment zijn de FASTQ-bestanden van lever- en hersenweefsel uitgelijnd tegen het humane referentiegenoom hg38 met de functie align() uit het Rsubread pakket. Hiervoor is een vooraf gegenereerde hg38-index gebruikt. De zes FASTQ-bestanden (drie lever en drie brein) zijn meegegeven via readfile1, zodat elke sample apart wordt uitgelijnd.
+
+Omdat het om RNA-seq data gaat, is type = 0 ingesteld zodat het juiste mappingprotocol voor RNA wordt toegepast. De inputbestanden zijn gzipped FASTQ-bestanden (input_format = "gzFASTQ") en de resultaten zijn opgeslagen als BAM-bestanden (output_format = "BAM").
+
+Met unique = TRUE zijn alleen reads meegenomen die op één duidelijke plek in het genoom mappen. Reads die op meerdere locaties kunnen mappen zijn uitgesloten, zodat elke read eenduidig wordt toegewezen. De alignment statistieken zijn opgeslagen in het object alignment_statistics voor verdere analyse.
+
+Het is uitgesloten om abiquiteit (op het meerdere passen van de sequencing reads) te verminderen zodat elke read eenduidig toegewezen wordt. multi mapping reads kunnen onzzekerheid veroorzaken in de kwantificatie. van gen expressie. Aligner weet dan niet op welke plek de read echt hoort. Door uitsluitend unique gemapte reads te behouden wordt de betrouwbaarheid van downstream analyse verhoogd.
+
+
+
+
+```{r,eval=TRUE, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(Rsubread)
+library(DESeq2)
+library(GOstats)
+```
+
+
+#Uitvoering van alignment
+```{r,eval=TRUE}
+alignment_statistics <- align(
+  
+  index = "/home/data/opra4v/hg38_index/hg38_index" , # # character string met de basisnaam van het indexbestand van het referentiegenoom, dat zich in     de huidige directory moet bevinden. Deze index is nodig om reads aan hun mogelijke positie      in het genoom te koppelen.
+  
+
+  readfile1 = file.path("~/OPRA/week3/fastq/",c("liver_1.fastq.gz",
+                   "liver_2.fastq.gz",
+                   "liver_3.fastq.gz",
+                   "brain_1.fastq.gz",
+                   "brain_2.fastq.gz",
+                   "brain_3.fastq.gz")) , #  character vector met bestandsnamen van bestanden met sequentiereads. Bij paired-end             sequencing bevat dit de eerste reads van elk paar.
+  type = 0 , # character string of een integer die het type sequencing data geeft om zo te bepalen welk        mapping protocol gebruikt moet worden. (0 voor rna, 1 voor dna).
+  input_format =  "FASTQ" , # character string van het format van de inputreads (bijv. FASTQ, gzFASTQ, BAM), bepaalt hoe      de functie het bestand moet inlezen.
+  
+  output_format = "BAM" , # character string van het format van de output (aligned reads), bepaalt in welk type bestand     (BAM/SAM) de aligner de resultaten opslaat.
+  
+
+  output_file = c(
+    "liver_1.bam",
+  "liver_2.bam",
+  "liver_3.bam",
+  "brain_1.bam",
+  "brain_2.bam",
+  "brain_3.bam"
+  ) ,  # character vector die aangeeft wat de naam/namen van de output bestanden zijn. (standaard        afgeleid van bestandsnamen uit readfile1 met een extra suffix).
+  
+  unique = TRUE , # bepaalt of alleen uniek gemapte reads worden gerapporteerd. Bij TRUE worden alleen reads met     één beste mappinglocatie meegenomen, bij FALSE ook reads met meerdere mogelijke mappings.
+  
+nthreads = 30  # aantal CPU-kernen die tegelijk gebruikt mogen worden, meer threads = sneller alignen door       parallel werken. standaardwaarde is 1.
+)
+
+
+
+# file.exists("/home/data/opra4v/fastq/SRR7961208.fastq.gz")
+```
+##Analyse van de Alignment statistieken
+
+```{r fig.cap="Figuur 1: Uniek gemapte reads per BAM bestand voor brein- en lever weefsel.",message=FALSE,warning=FALSE}
+# berekenen van het percentage uniquely mapped reads per BAM file
+unique_reads <- alignment_statistics["Uniquely_mapped_reads", ]
+total_reads <- alignment_statistics["Total_reads", ]
+percent_unique <- (unique_reads / total_reads) * 100
+
+# maken van een dataframe voor de staafdiagram van uniquely mapped reads per BAM file
+bam_files <- colnames(alignment_statistics)
+
+tissue <- ifelse(grepl("liver", bam_files), "Lever", "Brein")
+
+alignment_df <- data.frame(
+  BAM = bam_files,
+  PercentUnique = as.numeric(percent_unique),
+  Tissue = tissue
+)
+  
+# maken van de staafdiagram
+bam_staafdiagram <- ggplot(alignment_df, aes(x = BAM, y = PercentUnique, fill = Tissue)) +
+  geom_col() +
+  labs(
+    title = "Percentage uniek gemapte reads per BAM bestand",
+    x = "BAM bestand",
+    y = "Percentage uniek gemapte reads (%)",
+    fill = "Weefsel"
+  ) +
+  theme_minimal() 
+print(bam_staafdiagram)
+
+```
+In figuur 1 zijn per BAM bestand het percentage uniek gemapte reads te zien. Hierbij valt op dat de percentages tussen de twee weefsels verschillen. De levermonsters laten waarden zien tussen ongeveer 49% en 78%, terwijl de hersenmonsters waarden laten zien tussen ongeveer 28% tot 66%. Daarnaast is binnen beide weefseltypes spreiding tussen replicaten zichtbaar.
+
+## Conclusie van de alignmentstatistieken
+
+Uit de alignment statistieken blijkt dat het percentage uniek gemapte reads verschilt tussen de verschillende BAM-bestanden. Zowel binnen de lever- als de breinmonsters is spreiding zichtbaar. Een paar samples hebben een duidelijk lager percentage dan andere. Dit laat zien dat de alignmentkwaliteit niet voor alle monsters gelijk is.
+
+
+
+
