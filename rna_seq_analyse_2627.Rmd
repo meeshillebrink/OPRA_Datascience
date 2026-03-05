@@ -7,11 +7,11 @@ output: html_document
 
 ## Setup
 
-```{r setup, include=FALSE}
+```{R setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE)
 ```
 
-```{r, eval=TRUE, warning=FALSE, message=FALSE}
+```{R librarys, eval=TRUE, warning=FALSE, message=FALSE}
 library(tidyverse)
 library(Rsubread)
 library(DESeq2)
@@ -40,10 +40,10 @@ Het is uitgesloten om abiquiteit (op het meerdere passen van de sequencing reads
 
 ## Uitvoering van alignment
 
-```{r}
+```{R aligment}
 alignment_statistics <- align(
   
-  index = "/home/data/opra4v/hg38_index/" , 
+  index = "/home/data/opra4v/hg38_index/hg38_index" , 
   # character string met de basisnaam van het indexbestand van het referentiegenoom, dat zich in de huidige directory moet bevinden. Deze index is nodig om reads aan hun mogelijke positie in het genoom te koppelen.
   
 readfile1 = file.path(
@@ -66,7 +66,7 @@ readfile1 = file.path(
   output_format = "BAM", 
   # character string van het format van de output (aligned reads), bepaalt in welk type bestand (BAM/SAM) de aligner de resultaten opslaat.
   
-  output_file = file.path( "~/project/data/bam/", c(
+  output_file = file.path(c(
     "liver_1.bam", "liver_2.bam", "liver_3.bam",
   "brain_1.bam", "brain_2.bam", "brain_3.bam")), 
   # character vector die aangeeft wat de naam/namen van de output bestanden zijn. (standaard afgeleid van bestandsnamen uit readfile1 met een extra suffix).
@@ -81,7 +81,7 @@ readfile1 = file.path(
  
 ## Analyse van de alignment statistieken
 
-```{R fig.cap="Figuur 1: Uniek gemapte reads per BAM bestand voor brein- en lever weefsel."}
+```{R graffiek}
 # berekenen van het percentage uniquely mapped reads per BAM file
 unique_reads <- alignment_statistics["Uniquely_mapped_reads", ]
 total_reads <- alignment_statistics["Total_reads", ]
@@ -136,7 +136,7 @@ De resulterende counttabel vormt de basis voor de verdere differentiële genexpr
 ```{R count_tabel, include=F}
 read_counts <- featureCounts(
   
-  files = file.path( "~/project/data/bam/", c("liver_1.bam", "liver_2.bam", "liver_3.bam",
+  files = file.path( c("liver_1.bam", "liver_2.bam", "liver_3.bam",
   "brain_1.bam", "brain_2.bam", "brain_3.bam")), 
   # character vector die de naam/namen van het bestand/de bestanden met de uitgelijnde reads geeft. (BAM/SAM, bestandtype wordt automatisch gedetecteerd).
   
@@ -185,7 +185,7 @@ dds <- DESeqDataSetFromMatrix(
 
 ```
 
-```{R pca_plot, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Figuur 2. PCA van de VST-getransformeerde genexpressiewaarden, waarbij samples zijn gekleurd op basis van weefseltype.", fig.width=8, fig.height=6}
+```{R pca_plot, echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=6}
 
 # Variance Stabilizing Transformation (VST)
 # Normaliseert de data voor visualisatie
@@ -207,7 +207,7 @@ plotPCA(vsd, intgroup = "tissue") +
     liver = "#2A9D8F"  #groen
   )) +
   theme(
-    plot.title = element_text(hjust = 0.4, size = 14, face = "bold")
+    plot.title = element_text(hjust = 0.3, size = 14, face = "bold")
   )
 ```
 Figuur 2. Principal Component Analysis (PCA) van de VST-getransformeerde genexpressiewaarden. PC1 verklaart 93% van de totale variatie en scheidt de lever- en hersensamples duidelijk van elkaar. De samples zijn gekleurd op basis van het type weefsel.
@@ -287,7 +287,7 @@ De heatmap van de correlatiematrix bevestigt deze bevindingen. Samples afkomstig
 # DGE analyse
 
 
-```{R, eval=TRUE}
+```{R DGE}
 # uitvoeren van de DESeq2 analyse, waarbij size factors en dispersies worden geschat en een negatief binomiaal model wordt toegepast op de ruwe countdata
 dge <- DESeq(
     
@@ -299,18 +299,7 @@ dge <- DESeq(
 
 # GO-term analyse
 
-```{R, eval=TRUE}
-test_object <- new(
-    
-    "GOHyperGParams",
-    
-    geneIds = ............... , # numeric of character vector met de gene IDs van de genen die geselecteerd zijn voor de analyse.
-    
-    universeGeneIds = ............... , # vector van gene IDs in hetzelfde format als geneIds die bepaalt welke genen als achtergrond worden gebruikt bij de statistische toets. Als deze leeg is, worden alle genen meegenomen.
-    
-    annotation = ............... , # string met de naam van het annotatiepakket dat hoort bij de chip waarmee de data is gegenereerd.
-)
-```
+
 
 # Conclusie
 
