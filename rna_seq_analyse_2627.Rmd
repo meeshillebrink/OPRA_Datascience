@@ -117,7 +117,7 @@ bam_staafdiagram <- ggplot(alignment_df, aes(x = BAM, y = PercentUnique, fill = 
     y = "Percentage uniek gemapte reads (%)",
     fill = "Weefsel"
   ) +
-  theme_minimal() 
+  theme_minimal()
 
 # tonen staafdiagram
 bam_staafdiagram
