@@ -1,24 +1,24 @@
 ---
 title: "Analyse van RNA-seq data"
-author: "Groep_1"
+author: "Arjen Peters"
 date: "`r Sys.Date()`"
 output: html_document
 ---
 
 ## Setup
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+```{R setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE)
 ```
 
-```{r, eval=TRUE, warning=FALSE, message=FALSE}
+```{R librarys, eval=TRUE, warning=FALSE, message=FALSE, include = FALSE}
 library(tidyverse)
 library(Rsubread)
 library(DESeq2)
 library(GOstats)
+library(pheatmap)
 ```
 
---------------------------------------------------------------------------------
 # Introductie
 
 In dit project wordt onderzocht welke genen verschillend tot expressie komen tussen hersenweefsel en leverweefsel. De onderzoeksvraag luidt: welke verschillen in genexpressie zijn aanwezig tussen hersen- en leverweefsel en welke biologische processen hangen hiermee samen?
@@ -26,39 +26,6 @@ In dit project wordt onderzocht welke genen verschillend tot expressie komen tus
 Om deze vraag te beantwoorden wordt RNA-seq data geanalyseerd. De reads worden uitgelijnd tegen een referentiegenoom en samengevat in een counttabel, waarna een differentiële genexpressieanalyse wordt uitgevoerd. Vervolgens wordt een GO-term enrichment analyse toegepast om inzicht te krijgen in de biologische functies en processen die samenhangen met de gevonden expressieverschillen.
 
 <br>
-
-```{R}
-# deze code zorgt ervoor dat er een standaard folder gemaakt word die gebruikt kan worden voor alle code zodat alle data altijd op de juiste plek zit. verder doet download de code ook meteen alle files die gebruikt worden zodat je dat zelf ook niet hoeft te doen.
-
-project_dir <- file.path(Sys.getenv("HOME"), "project")
-# deze code maakt een standaard pat naar de folder die ook meteen word gemaakt
-
-data_dir <- file.path(project_dir, "data", "raw")
-bam_dir <- file.path(project_dir, "data", "bam")
-index_dir <- file.path(project_dir,"index")
-# de _dir code's maken routes naar specific tabs in de folders zodat alles meteen netjes op zijn eigen plek kan belanden.
-
-make_dir <- function(x) {
-  if (!dir.exists(x)) dir.create(x, recursive = T)}
-make_dir(data_dir)
-make_dir(bam_dir)
-make_dir(index_dir)
-# deze functie maakt de folders aan volgens de route die eerder gemaakt is als die nog niet bestaan, maar als ze al bestaan dan gebeurd dat niet.
-
-fastq_dest <- file.path(project_dir, "data", "raw")
-index_dest <- file.path(project_dir, "index")
-# de _dest code's worden gebruikt om aan te geven waar de data als die gecopied is naar toe moet.
-
-fastq_src <- "/home/data/opra4v/fastq/"
-index_src <- "/home/data/opra4v/hg38_index/"
-# de _srx code's geven de locaties die waar de files vandaan worden gedownload.
-
-if (!dir.exists(fastq_dest)) {
-  file.copy(fastq_src, fastq_dest, recursive = T)} 
-if (!dir.exists(index_dest)) {
-  file.copy(index_src, index_dest, recursive = T)}
-# de copy functie copied de code van de locatie die wordt aangegeven met de _src code en plakt het op de locatie die wordt aangegeven met _dest en de recursive wordt gebruikt om er voor te zorgen dat als die bestanden er al zijn dat die dan niet nog een keer worden gecopied.
-```
 
 # Alignment
 
@@ -70,42 +37,50 @@ Met unique = TRUE zijn alleen reads meegenomen die op één duidelijke plek in h
 
 Het is uitgesloten om abiquiteit (op het meerdere passen van de sequencing reads) te verminderen zodat elke read eenduidig toegewezen wordt. multi mapping reads kunnen onzzekerheid veroorzaken in de kwantificatie. van gen expressie. Aligner weet dan niet op welke plek de read echt hoort. Door uitsluitend unique gemapte reads te behouden wordt de betrouwbaarheid van downstream analyse verhoogd.
 
-## Uitvoering van alignment
 
-```{R}
+
+```{R aligment, include = FALSE}
 alignment_statistics <- align(
   
-  index = "~/project/index/hg38_index/hg38_index" , 
-  # character string met de basisnaam van het indexbestand van het referentiegenoom, dat zich in     de huidige directory moet bevinden. Deze index is nodig om reads aan hun mogelijke positie      in het genoom te koppelen.
+  index = "/home/data/opra4v/hg38_index/hg38_index" , 
+  # character string met de basisnaam van het indexbestand van het referentiegenoom, dat zich in de huidige directory moet bevinden. Deze index is nodig om reads aan hun mogelijke positie in het genoom te koppelen.
   
-  readfile1 = file.path("~/project/data/raw/fastq/", c( "SRR7961208.fastq.gz", "SRR7961209.fastq.gz", "SRR7961210.fastq.gz", "SRR7961214.fastq.gz", "SRR7961215.fastq.gz", "SRR7961216.fastq.gz")) , 
-  # character vector met bestandsnamen van bestanden met sequentiereads. Bij paired-end             sequencing bevat dit de eerste reads van elk paar.
+readfile1 = file.path(
+  "/home/data/opra4v/fastq/",
+  c("SRR7961208.fastq.gz",
+    "SRR7961209.fastq.gz",
+    "SRR7961210.fastq.gz",
+    "SRR7961214.fastq.gz",
+    "SRR7961215.fastq.gz",
+    "SRR7961216.fastq.gz")
+),
+  # character vector met bestandsnamen van bestanden met sequentiereads. Bij paired-end sequencing bevat dit de eerste reads van elk paar.
   
   type = 0, 
-  # character string of een integer die het type sequencing data geeft om zo te bepalen welk        mapping protocol gebruikt moet worden. (0 voor rna, 1 voor dna).
+  # character string of een integer die het type sequencing data geeft om zo te bepalen welk mapping protocol gebruikt moet worden. (0 voor rna, 1 voor dna).
   
   input_format = "gzFASTQ", 
   # character string van het format van de inputreads (bijv. FASTQ, gzFASTQ, BAM), bepaalt hoe      de functie het bestand moet inlezen.
   
   output_format = "BAM", 
-  # character string van het format van de output (aligned reads), bepaalt in welk type bestand     (BAM/SAM) de aligner de resultaten opslaat.
+  # character string van het format van de output (aligned reads), bepaalt in welk type bestand (BAM/SAM) de aligner de resultaten opslaat.
   
-  output_file = file.path( "~/project/data/bam/", c(
+  output_file = file.path(c(
     "liver_1.bam", "liver_2.bam", "liver_3.bam",
   "brain_1.bam", "brain_2.bam", "brain_3.bam")), 
-  # character vector die aangeeft wat de naam/namen van de output bestanden zijn. (standaard        afgeleid van bestandsnamen uit readfile1 met een extra suffix).
+  # character vector die aangeeft wat de naam/namen van de output bestanden zijn. (standaard afgeleid van bestandsnamen uit readfile1 met een extra suffix).
   
-  unique = T , 
-  # bepaalt of alleen uniek gemapte reads worden gerapporteerd. Bij TRUE worden alleen reads met     één beste mappinglocatie meegenomen, bij FALSE ook reads met meerdere mogelijke mappings.
+  unique = TRUE , 
+  # bepaalt of alleen uniek gemapte reads worden gerapporteerd. Bij TRUE worden alleen reads met één beste mappinglocatie meegenomen, bij FALSE ook reads met meerdere mogelijke mappings.
   
   nthreads = 30 
-  # aantal CPU-kernen die tegelijk gebruikt mogen worden, meer threads = sneller alignen door       parallel werken. standaardwaarde is 1.
+  # aantal CPU-kernen die tegelijk gebruikt mogen worden, meer threads = sneller alignen door parallel werken. standaardwaarde is 1.
 )
 ```
  
 ## Analyse van de alignment statistieken
 
-```{r fig.cap="Figuur 1: Uniek gemapte reads per BAM bestand voor brein- en lever weefsel."}
+```{R graffiek, echo = FALSE, message=FALSE, warning=FALSE}
 # berekenen van het percentage uniquely mapped reads per BAM file
 unique_reads <- alignment_statistics["Uniquely_mapped_reads", ]
 total_reads <- alignment_statistics["Total_reads", ]
@@ -122,6 +97,11 @@ alignment_df <- data.frame(
   Tissue = tissue
 )
   
+tissue_colors <- c(
+  Brein = "#FFD166", #geel
+  Lever = "#2A9D8F"  #groen
+)
+
 # maken van de staafdiagram
 bam_staafdiagram <- ggplot(alignment_df, aes(x = BAM, y = PercentUnique, fill = Tissue)) +
   geom_col() +
@@ -131,65 +111,191 @@ bam_staafdiagram <- ggplot(alignment_df, aes(x = BAM, y = PercentUnique, fill = 
     y = "Percentage uniek gemapte reads (%)",
     fill = "Weefsel"
   ) +
+  scale_fill_manual(values = tissue_colors) +
   theme_minimal() 
 
 bam_staafdiagram
 ```
 In figuur 1 zijn per BAM bestand het percentage uniek gemapte reads te zien. Hierbij valt op dat de percentages tussen de twee weefsels verschillen. De levermonsters laten waarden zien tussen ongeveer 49% en 78%, terwijl de hersenmonsters waarden laten zien tussen ongeveer 28% tot 66%. Daarnaast is binnen beide weefseltypes spreiding tussen replicaten zichtbaar.
 
-## Conclusie van de alignmentstatistieken
+# Conclusie van de alignmentstatistieken
 
 Uit de alignment statistieken blijkt dat het percentage uniek gemapte reads verschilt tussen de verschillende BAM-bestanden. Zowel binnen de lever- als de breinmonsters is spreiding zichtbaar. Een paar samples hebben een duidelijk lager percentage dan andere. Dit laat zien dat de alignmentkwaliteit niet voor alle monsters gelijk is.
 
---------------------------------------------------------------------------------
 
 # Count tabel en data inspectie
 
-```{R}
+In deze stap worden de uitgelijnde BAM-bestanden samengevat om te bepalen hoeveel reads per gen zijn gemapt. Hiervoor gebruiken we de functie featureCounts uit het pakket Rsubread, in combinatie met de ingebouwde NCBI hg38 RefSeq annotatie.
+
+De tellingen worden uitgevoerd op gen-niveau (niet op transcript-niveau). Dit betekent dat reads die overlappen met exonen van hetzelfde gen worden samengevoegd tot één totaal aantal reads per gen per sample.
+
+De resulterende counttabel vormt de basis voor de verdere differentiële genexpressieanalyse met DESeq2.
+
+```{R count_tabel, include=F}
 read_counts <- featureCounts(
   
-  files = open.srcfile() , # character vector die de naam/namen van het bestand/de bestanden met de uitgelijnde reads geeft. (BAM/SAM, bestandtype wordt automatisch gedetecteerd).
+  files = file.path( c("liver_1.bam", "liver_2.bam", "liver_3.bam",
+  "brain_1.bam", "brain_2.bam", "brain_3.bam")), 
+  # character vector die de naam/namen van het bestand/de bestanden met de uitgelijnde reads geeft. (BAM/SAM, bestandtype wordt automatisch gedetecteerd).
   
-  annot.inbuilt =  , # character string die aangeeft welke ingebouwde genannotatie wordt gebruikt bij het samenvatten van reads. De waarde bepaalt voor welk organisme en genoomversie de annotatie geldt, met mm39 als standaard. In het geval van deze analyse wordt hg38 gebruikt.
+  annot.inbuilt =  "hg38", 
+  # character string die aangeeft welke ingebouwde genannotatie wordt gebruikt bij het samenvatten van reads. De waarde bepaalt voor welk organisme en genoomversie de annotatie geldt, met mm39 als standaard. In het geval van deze analyse wordt hg38 gebruikt.
   
-  useMetaFeatures = ............... , # indicator voor op welk niveau reads worden samengevat. Bij TRUE gebeurt dit op meta-feature niveau zoals genen, bij FALSE op feature-niveau zoals exons. In het geval van deze analyse is het TRUE.
+  useMetaFeatures = T , 
+  # indicator voor op welk niveau reads worden samengevat. Bij TRUE gebeurt dit op meta-feature niveau zoals genen, bij FALSE op feature-niveau zoals exons. In het geval van deze analyse is het TRUE.
   
-  strandSpecific = ............... , # Integer vector die bepaalt of en hoe rekening wordt gehouden met de strandrichting bij het tellen van reads. Waarde 0 betekent geen strand-specifieke telling, 1 telt reads in dezelfde richting als de annotatie en 2 in de omgekeerde richting. Standaard wordt 0 gebruikt.
+  strandSpecific = 0 , 
+  # Integer vector die bepaalt of en hoe rekening wordt gehouden met de strandrichting bij het tellen van reads. Waarde 0 betekent geen strand-specifieke telling, 1 telt reads in dezelfde richting als de annotatie en 2 in de omgekeerde richting. Standaard wordt 0 gebruikt.
   
-  isPairedEnd = ............... , # logical vector die aangeeft of de gebruikte libraries paired-end reads bevatten. FALSE betekent single-end data. Deze instelling bepaalt samen met countReadPairs of reads per paar of afzonderlijk worden geteld.
+  isPairedEnd = F ,
+  # logical vector die aangeeft of de gebruikte libraries paired-end reads bevatten. FALSE betekent single-end data. Deze instelling bepaalt samen met countReadPairs of reads per paar of afzonderlijk worden geteld.
   
-  nthreads = ............... # aantal CPU-kernen die tegelijk gebruikt mogen worden, meer threads = sneller alignen door parallel werken. standaardwaarde is 1.
+  nthreads = 30 
+  # aantal CPU-kernen die tegelijk gebruikt mogen worden, meer threads = sneller alignen door parallel werken. standaardwaarde is 1.
 )
 ```
 
---------------------------------------------------------------------------------
+# data inspectie
+
+```{R prep, include=F}
+# Stap 1: Extractie van de gen-niveau countmatrix uit featureCounts
+count_mat <- read_counts$counts
+
+# DESeq2 vereist gehele getallen (integer counts)
+storage.mode(count_mat) <- "integer"
+
+# Stap 2: Aanmaken van metadata (colData)
+# Hier geven we per sample aan van welk weefsel het afkomstig is.
+# De volgorde moet exact overeenkomen met de kolommen van count_mat.
+coldata <- data.frame(
+  tissue = c("liver","liver","liver","brain","brain","brain"),
+  row.names = colnames(count_mat)
+)
+
+# Stap 3: Aanmaken van het DESeqDataSet object
+# design = ~ tissue betekent dat we verschillen in genexpressie
+# willen testen op basis van het type weefsel.
+dds <- DESeqDataSetFromMatrix(
+  countData = count_mat,
+  colData   = coldata,
+  design    = ~ tissue
+)
+
+```
+
+```{R pca_plot, echo=FALSE, message=FALSE, warning=FALSE}
+
+# Variance Stabilizing Transformation (VST)
+# Normaliseert de data voor visualisatie
+# Stap 1: Variance Stabilizing Transformation (VST)
+# We passen VST toe zodat de expressiewaarden beter vergelijkbaar zijn tussen samples
+# (variatie wordt gestabiliseerd; geschikt voor PCA/heatmap).
+vsd <- vst(dds, blind = FALSE)
+
+# Stap 2: PCA-plot maken
+# plotPCA gebruikt standaard de 500 genen met de hoogste variantie.
+# 'intgroup = "tissue"' zorgt ervoor dat samples worden gekleurd op basis van weefseltype.
+plotPCA(vsd, intgroup = "tissue") +
+  labs(
+    color = "Weefsel",
+    title = "Principal Component Analyse (PCA) van VST-getransformeerde genexpressiewaarden"
+  ) +
+  scale_color_manual(values = c(
+    brain = "#FFD166", #geel
+    liver = "#2A9D8F"  #groen
+  )) +
+  theme(
+    plot.title = element_text(size = 10, face = "bold")
+  )
+```
+Figuur 2. Principal Component Analysis (PCA) van de VST-getransformeerde genexpressiewaarden. PC1 verklaart 93% van de totale variatie en scheidt de lever- en hersensamples duidelijk van elkaar. De samples zijn gekleurd op basis van het type weefsel.
+
+De PCA-plot toont een duidelijke clustering van de samples op basis van weefseltype. Lever- en hersensamples bevinden zich aan tegenovergestelde zijden van de PC1-as, wat aangeeft dat het grootste deel van de variatie in genexpressie wordt bepaald door het weefsel. De replicaten binnen elk weefsel clusteren dicht bij elkaar, wat duidt op consistente biologische metingen en beperkte intra-groep variatie. Er zijn geen duidelijke outliers zichtbaar, wat wijst op goede datakwaliteit.
+
+
+```{R heatmap_plot, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Figuur 3. Heatmap van de correlatiematrix tussen de samples op basis van VST-getransformeerde genexpressiewaarden.", fig.width=8, fig.height=6}
+
+# Stap 1: Extractie van de VST-getransformeerde expressiewaarden
+# assay(vsd) bevat de genexpressiematrix na variance stabilizing transformation.
+# Deze matrix wordt gebruikt voor visualisatie (niet voor DGE zelf).
+vsd_mat <- assay(vsd)
+
+# Stap 2: Berekenen van de Pearson correlatiematrix
+# cor() berekent de correlatie tussen alle samples.
+# Elke cel in cor_mat geeft de correlatie tussen twee samples weer.
+cor_mat <- cor(vsd_mat)
+
+# Stap 3: Aanmaken van een annotatie-object voor de heatmap
+# Hier koppelen we elk sample aan het bijbehorende weefseltype.
+# We halen de informatie direct uit de kolomnamen van de correlatiematrix
+# zodat de annotatie exact overeenkomt met de matrix (voorkomt NA-problemen).
+annotation <- data.frame(
+  tissue = ifelse(
+    grepl("^brain", colnames(cor_mat), ignore.case = TRUE),
+    "Brein",
+    "Lever"
+  )
+)
+
+# Zorg ervoor dat de rijnamen exact overeenkomen met de matrix
+rownames(annotation) <- colnames(cor_mat)
+
+# Zet het weefseltype om naar een factor en bepaal expliciet de volgorde
+# Dit bepaalt ook de volgorde in de legenda.
+annotation$tissue <- factor(annotation$tissue,
+                             levels = c("Brein", "Lever"))
+
+# Stap 4: Definiëren van vaste kleuren voor de weefselannotatie
+# Deze kleuren staan los van de correlatiekleuren.
+ann_colors <- list(
+  tissue = c(
+    Brein = "#FFD166",  # geel
+    Lever = "#009E73"   # groen
+  )
+)
+
+# Stap 5: Visualisatie van de correlatiematrix met pheatmap
+# - Warme kleuren (rood) = hoge correlatie
+# - Koele kleuren (blauw) = lagere correlatie
+# - Dendrogrammen tonen hiërarchische clustering van samples
+pheatmap(
+  cor_mat,
+  annotation_col = annotation,
+  annotation_row = annotation,
+  annotation_colors = ann_colors,
+  main = "Heatmap van sample-correlaties per weefsel",
+  angle_col = 45,
+  color = colorRampPalette(c("#2c7bb6", "white", "#d7191c"))(100)
+)
+```
+Figuur 3. Heatmap van de correlatiematrix tussen alle samples op basis van VST-getransformeerde genexpressiewaarden. Warme kleuren (rood/geel) geven een hoge correlatie weer, terwijl koelere kleuren (blauw) een lagere correlatie aanduiden.
+
+De heatmap bevestigt het patroon dat in de PCA werd waargenomen. Samples afkomstig van hetzelfde weefsel vertonen een hoge onderlinge correlatie, terwijl de correlatie tussen lever- en hersensamples duidelijk lager is. De hiërarchische clustering groepeert de samples in twee hoofdtakken die overeenkomen met het weefseltype. Dit ondersteunt dat het weefseltype de dominante factor is in de dataset en dat de replicaten binnen elke groep consistent zijn.
+
+# conclusie
+
+De uitgevoerde PCA-analyse toont een duidelijke scheiding tussen de lever- en hersensamples. De eerste principale component (PC1) verklaart 93% van de totale variatie in de dataset. Dit betekent dat het grootste deel van de variatie in genexpressie wordt bepaald door het type weefsel. Lever- en hersensamples bevinden zich aan tegenovergestelde zijden van de PC1-as, wat wijst op substantiële biologische verschillen tussen deze twee weefsels.
+
+Daarnaast clusteren de biologische replicaten binnen elk weefsel dicht bij elkaar. Dit suggereert dat de variatie binnen een weefselgroep beperkt is en dat de metingen reproduceerbaar zijn. Er zijn geen duidelijke outliers zichtbaar in de PCA-plot, wat een indicatie is van consistente sequencingkwaliteit en betrouwbare data.
+
+De heatmap van de correlatiematrix bevestigt deze bevindingen. Samples afkomstig van hetzelfde weefsel vertonen een hoge onderlinge correlatie (warme kleuren), terwijl de correlatie tussen lever- en hersensamples duidelijk lager is (koelere kleuren). De hiërarchische clustering groepeert de samples in twee hoofdtakken die overeenkomen met het weefseltype. Dit ondersteunt opnieuw dat het weefseltype de dominante factor is in de dataset.
+
 
 # DGE analyse
 
-```{r, eval=TRUE}
+
+```{R DGE}
 # uitvoeren van de DESeq2 analyse, waarbij size factors en dispersies worden geschat en een negatief binomiaal model wordt toegepast op de ruwe countdata
 dge <- DESeq(
     
-    object = ............... , # het DESeqDataSet object dat de input vormt voor de DESeq2 analyse.
+    object = dds , # het DESeqDataSet object dat de input vormt voor de DESeq2 analyse.
 )
 ```
 
---------------------------------------------------------------------------------
 
 # GO-term analyse
 
-```{r, eval=TRUE}
-test_object <- new(
-    
-    "GOHyperGParams",
-    
-    geneIds = ............... , # numeric of character vector met de gene IDs van de genen die geselecteerd zijn voor de analyse.
-    
-    universeGeneIds = ............... , # vector van gene IDs in hetzelfde format als geneIds die bepaalt welke genen als achtergrond worden gebruikt bij de statistische toets. Als deze leeg is, worden alle genen meegenomen.
-    
-    annotation = ............... , # string met de naam van het annotatiepakket dat hoort bij de chip waarmee de data is gegenereerd.
-)
-```
+
 
 # Conclusie
 
