@@ -190,7 +190,8 @@ dds <- DESeqDataSetFromMatrix(
 # Data inspectie dmv PCA
 
 # De variance stabilizing transformatie corrigeert voor verschillen in sequencingdiepte en zorgt ervoor dat de spreiding van lage en hoge expressiewaarden beter vergelijkbaar wordt.
-vsd <- vst(dds, blind = TRUE)
+vsd <- vst(dds, blind = FALSE) # blind = FALSE, omdat DESeq2 dan rekening houdt met het design (~ weefsel) en de biologische verschillen tussen lever en brein zichtbaar blijven
+
 
 # De getransformeerde expressiewaarden worden uit het DESeqDataSet gehaald in de vorm van een matrix, zodat deze gebruikt kunnen worden voor de PCA-analyse.
 vsd_matrix <- assay(vsd)
@@ -238,7 +239,7 @@ Figuur 2 toont het PCA-plot die een duidelijke scheiding laat zien tussen lever-
 # Data inspectie dmv correlatiematrix en heatmap
 
 # De variance stabilizing transformatie corrigeert voor verschillen in sequencingdiepte en maakt de expressiewaarden beter vergelijkbaar.
-vsd <- vst(dds, blind = TRUE)
+vsd <- vst(dds, blind = FALSE) # blind = FALSE, omdat DESeq2 dan rekening houdt met het design (~ weefsel) en de biologische verschillen tussen lever en brein zichtbaar blijven. 
 
 # De getransformeerde expressiewaarden worden als matrix opgehaald uit het DESeqDataSet object.
 vsd_matrix <- assay(vsd)
