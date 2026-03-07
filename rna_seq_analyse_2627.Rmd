@@ -229,7 +229,7 @@ ggplot(pca_plotting, aes(x = PC1, y = PC2)) +
   )
 ```
 
-Figuur 2 toont het PCA-plot die een duidelijke scheiding laat zien tussen lever- en breinsamples. De leversamples (geel) liggen links in de grafiek en clusteren dicht bij elkaar, terwijl de breinsamples (groen) rechts liggen en eveneens een aparte cluster vormen. PC1 verklaart het grootste deel van de variantie en scheidt de twee weefsels duidelijk van elkaar.
+Figuur 2 toont het PCA-plot die een duidelijke scheiding laat zien tussen lever- en breinsamples. De leversamples (geel) liggen links in de grafiek en clusteren dicht bij elkaar, terwijl de breinsamples (groen) rechts liggen en eveneens een aparte cluster vormen (met een enkel punt die afwijkt van de twee andere breinsamples). PC1 verklaart het grootste deel van de variantie en scheidt de twee weefsels duidelijk van elkaar.
 
 <br>
 
