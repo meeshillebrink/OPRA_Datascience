@@ -37,7 +37,7 @@ Met unique = TRUE zijn alleen reads meegenomen die op één duidelijke plek in h
 
 Het is uitgesloten om abiquiteit (op het meerdere passen van de sequencing reads) te verminderen zodat elke read eenduidig toegewezen wordt. multi mapping reads kunnen onzzekerheid veroorzaken in de kwantificatie. van gen expressie. Aligner weet dan niet op welke plek de read echt hoort. Door uitsluitend unique gemapte reads te behouden wordt de betrouwbaarheid van downstream analyse verhoogd.
 
-## Uitvoering van alignment
+
 
 ```{R aligment, include = FALSE}
 alignment_statistics <- align(
@@ -183,7 +183,7 @@ dds <- DESeqDataSetFromMatrix(
 
 ```
 
-```{R pca_plot, echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=6}
+```{R pca_plot, echo=FALSE, message=FALSE, warning=FALSE}
 
 # Variance Stabilizing Transformation (VST)
 # Normaliseert de data voor visualisatie
@@ -205,7 +205,7 @@ plotPCA(vsd, intgroup = "tissue") +
     liver = "#2A9D8F"  #groen
   )) +
   theme(
-    plot.title = element_text(hjust = 0.3, size = 14, face = "bold")
+    plot.title = element_text(size = 10, face = "bold")
   )
 ```
 Figuur 2. Principal Component Analysis (PCA) van de VST-getransformeerde genexpressiewaarden. PC1 verklaart 93% van de totale variatie en scheidt de lever- en hersensamples duidelijk van elkaar. De samples zijn gekleurd op basis van het type weefsel.
