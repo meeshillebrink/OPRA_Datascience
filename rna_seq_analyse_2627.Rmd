@@ -147,7 +147,7 @@ De PCA is uitgevoerd om te beoordelen of samples van hetzelfde weefsel bij elkaa
 
 ## Genereren van een genexpressie counttabel uit aligned reads
 
-```{r include=FALSE, echo=TRUE}
+```{r, echo=TRUE}
 
 # Genereren van een count-table
 
