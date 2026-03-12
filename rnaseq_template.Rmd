@@ -1,0 +1,106 @@
+---
+title: "Template voor het analyseren van RNA-seq data"
+author: "Bas van Gestel"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Setup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+```
+
+```{r, eval=TRUE, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(Rsubread)
+library(DESeq2)
+library(GOstats)
+```
+
+--------------------------------------------------------------------------------
+
+## Alignment
+
+
+```{R}
+alignment_statistics <- align(
+  
+  index = ............... , # ...............
+  
+  readfile1 = ............... , # ...............
+  
+  type = ............... , # ...............
+  
+  input_format =  ............... , # ...............
+  
+  output_format = ............... , # ...............
+  
+  output_file = ............... , # ...............
+  
+  unique = ............... , # ...............
+  
+  nthreads = ............... # ...............
+  
+)
+```
+
+--------------------------------------------------------------------------------
+
+## Count tabel en data inspectie
+
+```{R}
+read_counts <- featureCounts(
+  
+  files = ............... , # ...............
+  
+  annot.inbuilt = ............... , # ...............
+  
+  useMetaFeatures = ............... , # ...............
+  
+  strandSpecific = ............... , # ...............
+  
+  isPairedEnd = ............... , # ...............
+  
+  nthreads = ............... # ...............
+)
+```
+
+--------------------------------------------------------------------------------
+
+## DGE analyse
+
+```{r, eval=TRUE}
+# ...............
+dge <- DESeq(
+    
+    object = ............... , # ...............
+)
+```
+
+--------------------------------------------------------------------------------
+
+## GO-term analyse
+
+```{r, eval=TRUE}
+test_object <- new(
+    
+    "GOHyperGParams",
+    
+    geneIds = ............... , # ...............
+    
+    universeGeneIds = ............... , # ...............
+    
+    annotation = ............... , # ...............
+    
+    ontology = ............... , # ...............
+    
+    pvalueCutoff = ............... , # ...............
+    
+    testDirection = ............... # ...............
+    )
+
+goterm_analysis <- hyperGTest(test_object)
+```
+
+
