@@ -5,8 +5,6 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
-## Setup
-
 ```{R setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE)
 ```
@@ -17,6 +15,8 @@ library(Rsubread)
 library(DESeq2)
 library(GOstats)
 library(pheatmap)
+library(AnnotationDbi)
+library(org.Hs.eg.db)
 ```
 
 # Introductie
@@ -80,7 +80,7 @@ readfile1 = file.path(
  
 ## Analyse van de alignment statistieken
 
-```{R graffiek, echo = FALSE, message=FALSE, warning=FALSE}
+```{R graffiek, echo = FALSE, message=FALSE, warning=FALSE, fig.height=8, fig.width=12}
 # berekenen van het percentage uniquely mapped reads per BAM file
 unique_reads <- alignment_statistics["Uniquely_mapped_reads", ]
 total_reads <- alignment_statistics["Total_reads", ]
@@ -123,13 +123,31 @@ In figuur 1 zijn per BAM bestand het percentage uniek gemapte reads te zien. Hie
 Uit de alignment statistieken blijkt dat het percentage uniek gemapte reads verschilt tussen de verschillende BAM-bestanden. Zowel binnen de lever- als de breinmonsters is spreiding zichtbaar. Een paar samples hebben een duidelijk lager percentage dan andere. Dit laat zien dat de alignmentkwaliteit niet voor alle monsters gelijk is.
 
 
-# Count tabel en data inspectie
+## Count tabel en data inspectie
 
 In deze stap worden de uitgelijnde BAM-bestanden samengevat om te bepalen hoeveel reads per gen zijn gemapt. Hiervoor gebruiken we de functie featureCounts uit het pakket Rsubread, in combinatie met de ingebouwde NCBI hg38 RefSeq annotatie.
 
 De tellingen worden uitgevoerd op gen-niveau (niet op transcript-niveau). Dit betekent dat reads die overlappen met exonen van hetzelfde gen worden samengevoegd tot één totaal aantal reads per gen per sample.
 
 De resulterende counttabel vormt de basis voor de verdere differentiële genexpressieanalyse met DESeq2.
+
+# Code verantwoording
+
+Voor het genereren van de count table wordt gebruikgemaakt van de functie featureCounts() uit het pakket Rsubread. Deze functie telt hoeveel sequencing reads overlappen met genannotaties in het referentiegenoom. Als input worden de uitgelijnde BAM-bestanden van de zes samples gebruikt.
+
+Met de parameter annot.inbuilt = "hg38" wordt de ingebouwde annotatie van het humane referentiegenoom hg38 gebruikt. Hierdoor kan de functie bepalen welke reads overlappen met genen in het genoom. Door useMetaFeatures = TRUE in te stellen worden de reads samengevat op gen-niveau in plaats van op exon-niveau, zodat alle reads die tot hetzelfde gen behoren worden gecombineerd tot één totaal aantal reads per gen per sample.
+
+De parameter strandSpecific = 0 geeft aan dat de sequencingdata niet strand-specifiek wordt geteld. Daarnaast wordt isPairedEnd = FALSE gebruikt omdat de reads als single-end sequencing data worden behandeld. Met nthreads = 30 wordt parallelle verwerking toegepast, waardoor het tellen van reads sneller wordt uitgevoerd.
+
+De output van featureCounts() bevat een matrix met readtellingen per gen per sample. Deze matrix wordt geëxtraheerd met read_counts$counts en opgeslagen als count matrix (count_mat). Omdat DESeq2 werkt met gehele readtellingen wordt het datatype expliciet omgezet naar integer waarden.
+
+Vervolgens wordt een metadata-object (coldata) aangemaakt waarin voor elke sample wordt aangegeven van welk weefseltype deze afkomstig is (lever of brein). De volgorde van deze metadata wordt afgestemd op de kolommen van de count matrix zodat elke sample correct gekoppeld is aan het bijbehorende weefseltype.
+
+De parameter strandSpecific = 0 geeft aan dat de sequencingdata niet strand-specifiek wordt geteld. Daarnaast wordt isPairedEnd = FALSE gebruikt omdat de reads als single-end sequencing data worden behandeld. Met nthreads = 30 wordt parallelle verwerking toegepast, waardoor het tellen van reads sneller wordt uitgevoerd.
+
+De output van featureCounts() bevat een matrix met readtellingen per gen per sample. Deze matrix wordt geëxtraheerd met read_counts$counts en opgeslagen als count matrix (count_mat). Omdat DESeq2 werkt met gehele readtellingen wordt het datatype expliciet omgezet naar integer waarden.
+
+Vervolgens wordt een metadata-object (coldata) aangemaakt waarin voor elke sample wordt aangegeven van welk weefseltype deze afkomstig is (lever of brein). De volgorde van deze metadata wordt afgestemd op de kolommen van de count matrix zodat elke sample correct gekoppeld is aan het bijbehorende weefseltype.
 
 ```{R count_tabel, include=F}
 read_counts <- featureCounts(
@@ -183,7 +201,7 @@ dds <- DESeqDataSetFromMatrix(
 
 ```
 
-```{R pca_plot, echo=FALSE, message=FALSE, warning=FALSE}
+```{R pca_plot, echo=FALSE, message=FALSE, warning=FALSE, fig.height=8, fig.witdh=10}
 
 # Variance Stabilizing Transformation (VST)
 # Normaliseert de data voor visualisatie
@@ -203,17 +221,14 @@ plotPCA(vsd, intgroup = "tissue") +
   scale_color_manual(values = c(
     brain = "#FFD166", #geel
     liver = "#2A9D8F"  #groen
-  )) +
-  theme(
-    plot.title = element_text(size = 10, face = "bold")
-  )
+  ))
 ```
 Figuur 2. Principal Component Analysis (PCA) van de VST-getransformeerde genexpressiewaarden. PC1 verklaart 93% van de totale variatie en scheidt de lever- en hersensamples duidelijk van elkaar. De samples zijn gekleurd op basis van het type weefsel.
 
 De PCA-plot toont een duidelijke clustering van de samples op basis van weefseltype. Lever- en hersensamples bevinden zich aan tegenovergestelde zijden van de PC1-as, wat aangeeft dat het grootste deel van de variatie in genexpressie wordt bepaald door het weefsel. De replicaten binnen elk weefsel clusteren dicht bij elkaar, wat duidt op consistente biologische metingen en beperkte intra-groep variatie. Er zijn geen duidelijke outliers zichtbaar, wat wijst op goede datakwaliteit.
 
 
-```{R heatmap_plot, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Figuur 3. Heatmap van de correlatiematrix tussen de samples op basis van VST-getransformeerde genexpressiewaarden.", fig.width=8, fig.height=6}
+```{R heatmap_plot, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Figuur 3. Heatmap van de correlatiematrix tussen de samples op basis van VST-getransformeerde genexpressiewaarden.", fig.width=10, fig.height=8}
 
 # Stap 1: Extractie van de VST-getransformeerde expressiewaarden
 # assay(vsd) bevat de genexpressiematrix na variance stabilizing transformation.
@@ -281,19 +296,223 @@ Daarnaast clusteren de biologische replicaten binnen elk weefsel dicht bij elkaa
 De heatmap van de correlatiematrix bevestigt deze bevindingen. Samples afkomstig van hetzelfde weefsel vertonen een hoge onderlinge correlatie (warme kleuren), terwijl de correlatie tussen lever- en hersensamples duidelijk lager is (koelere kleuren). De hiërarchische clustering groepeert de samples in twee hoofdtakken die overeenkomen met het weefseltype. Dit ondersteunt opnieuw dat het weefseltype de dominante factor is in de dataset.
 
 
-# DGE analyse
+## DGE analyse
 
+# Statistische methode voor de DGE-analyse
 
-```{R DGE}
+De differentiële genexpressie-analyse (DGE) is uitgevoerd met het DESeq2 pakket in R. DESeq2 modelleert RNA-seq countdata met behulp van een negatief binomiaal model, waarbij rekening wordt gehouden met verschillen in sequencingdiepte tussen samples door middel van size factor normalisatie. Vervolgens worden voor elk gen de dispersies geschat en wordt een statistische test uitgevoerd om te bepalen of de genexpressie significant verschilt tussen de onderzochte condities.
+
+De verkregen p-waarden worden gecorrigeerd voor multiple testing met de Benjamini–Hochberg methode, wat resulteert in een adjusted p-waarde (padj). Genen met een adjusted p-waarde kleiner dan 0,05 worden beschouwd als significant differentieel geëxpresseerd. In deze analyse worden genen met een absolute log2 fold change groter dan 1 en een padj < 0,05 beschouwd als biologisch relevante differentieel geëxpresseerde genen.
+
+# Code verantwoording DGE analyse en visualisatie
+
+Voor het uitvoeren van de differentiële genexpressie-analyse is gebruikgemaakt van het DESeq2 pakket. In eerste instantie wordt de functie DESeq() toegepast op het DESeqDataSet object (dds). Deze functie schat de size factors en dispersies van de RNA-seq data en past een negatief binomiaal model toe op de ruwe countdata. Op basis hiervan wordt voor elk gen een statistische test uitgevoerd om verschillen in genexpressie tussen de condities te bepalen.
+
+De resultaten van deze analyse worden vervolgens opgeslagen met de functie results() in het object res. Dit object bevat onder andere de log2 fold change, p-waarde en adjusted p-waarde (padj) voor elk gen.
+
+Volcano plot
+
+Voor de volcano plot worden de resultaten eerst omgezet naar een dataframe zodat deze eenvoudiger met ggplot2 gevisualiseerd kunnen worden. Genen met ontbrekende waarden voor log2 fold change of adjusted p-waarde worden verwijderd om fouten in de visualisatie te voorkomen.
+
+Vervolgens worden drempelwaarden ingesteld voor de analyse, namelijk een log2 fold change van ±1 en een adjusted p-waarde kleiner dan 0,05. Op basis van deze drempels wordt voor elk gen bepaald of het upgereguleerd, downgereguleerd of niet significant is.
+
+De volcano plot wordt vervolgens gemaakt met ggplot(), waarbij de log2 fold change op de x-as staat en de −log10 van de adjusted p-waarde op de y-as. Hierdoor verschijnen genen met een hoge statistische significantie hoger in de grafiek. Significante genen worden oranje weergegeven, terwijl niet-significante genen grijs zijn.
+
+Daarnaast worden met stippellijnen de ingestelde drempelwaarden voor de log2 fold change en p-waarde weergegeven. Het aantal upgereguleerde en downgereguleerde genen wordt met tekstlabels in de grafiek aangegeven.
+
+Heatmap van differentieel geëxpresseerde genen
+
+Voor de heatmap worden eerst de genen geselecteerd met de kleinste adjusted p-waarden. Hierbij worden de vijf meest upgereguleerde en de vijf meest downgereguleerde genen geselecteerd.
+
+Vervolgens worden de genormaliseerde countwaarden van deze genen opgehaald uit het DESeq2 object met de functie counts(..., normalized = TRUE). Om de vergelijkbaarheid tussen genen te verbeteren worden deze waarden log2-getransformeerd.
+
+Omdat de resultaten oorspronkelijk gen-identifiers bevatten, worden deze met de functie mapIds() uit het AnnotationDbi pakket omgezet naar gensymbolen met behulp van de annotatiedatabase org.Hs.eg.db. Wanneer er geen gensymbool beschikbaar is, wordt de originele identifier behouden.
+
+Daarna wordt een annotatie-object gemaakt waarin voor elke sample het bijbehorende weefseltype wordt vastgelegd (brein of lever). Dit wordt gebruikt om een kleurannotatie boven de heatmap te tonen.
+
+Ten slotte wordt met de functie pheatmap() de heatmap gegenereerd. Hierbij geven warme kleuren een relatief hogere expressie aan en koelere kleuren een lagere expressie. De expressiewaarden worden per gen geschaald (scale = "row") zodat verschillen tussen de samples duidelijk zichtbaar worden.
+
+```{R DGE, include = FALSE}
 # uitvoeren van de DESeq2 analyse, waarbij size factors en dispersies worden geschat en een negatief binomiaal model wordt toegepast op de ruwe countdata
 dge <- DESeq(
     
     object = dds , # het DESeqDataSet object dat de input vormt voor de DESeq2 analyse.
 )
+res <- results(dge)
 ```
 
+## volcano grafiek
+```{R volcano,echo=FALSE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
+# Zet resultaten om naar dataframe
+res_df <- as.data.frame(res)
 
-# GO-term analyse
+# Voeg gen-ID toe als aparte kolom
+res_df$gene_id <- rownames(res_df)
+
+
+# Verwijder rijen met ontbrekende waarden in belangrijke kolommen
+res_df <- res_df[!is.na(res_df$log2FoldChange) & !is.na(res_df$padj), ]
+
+# Stel thresholds in
+lfc_threshold <- 1
+padj_threshold <- 0.05
+
+# Maak kolom die aangeeft of een gen significant is
+res_df$regulation <- "Niet significant"
+res_df$regulation[res_df$padj < padj_threshold & res_df$log2FoldChange > lfc_threshold] <- "Upgereguleerd"
+res_df$regulation[res_df$padj < padj_threshold & res_df$log2FoldChange < -lfc_threshold] <- "Downgereguleerd"
+
+# Aantal significante up- en downregulated genen
+n_up <- sum(res_df$regulation == "Upgereguleerd")
+n_down <- sum(res_df$regulation == "Downgereguleerd")
+
+# Extra kolom voor plotting op y-as
+res_df$minus_log10_padj <- -log10(res_df$padj)
+
+# Maak volcano plot
+ggplot(res_df, aes(x = log2FoldChange, y = minus_log10_padj)) +
+  geom_point(aes(color = regulation), alpha = 0.7, size = 1.8) +
+  scale_color_manual(
+    values = c(
+      "Niet significant" = "grey70",
+      "Upgereguleerd" = "orange",
+      "Downgereguleerd" = "orange"
+    )
+  ) +
+  geom_vline(xintercept = c(-lfc_threshold, lfc_threshold),
+             linetype = "dashed", color = "black") +
+  geom_hline(yintercept = -log10(padj_threshold),
+             linetype = "dashed", color = "black") +
+  annotate("text",
+           x = max(res_df$log2FoldChange, na.rm = TRUE) * 0.8,
+           y = max(res_df$minus_log10_padj, na.rm = TRUE) * 0.95,
+           label = paste("Upgereguleerd:", n_up),
+           hjust = 1, size = 4) +
+  annotate("text",
+           x = min(res_df$log2FoldChange, na.rm = TRUE) * 0.8,
+           y = max(res_df$minus_log10_padj, na.rm = TRUE) * 0.95,
+           label = paste("Downgereguleerd:", n_down),
+           hjust = 0, size = 4) +
+  labs(
+    title = "Volcano plot van differentieel geëxpresseerde genen",
+    x = "log2 fold change",
+    y = expression(-log[10]("adjusted p-waarde")),
+    color = "Status"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+    legend.position = "bottom"
+  )
+
+```
+Figuur 4. Volcano plot van differentieel geëxpresseerde genen tussen lever- en hersenweefsel.
+Op de x-as staat de log2 fold change van de genexpressie tussen de twee condities, terwijl op de y-as de −log10 van de adjusted p-waarde wordt weergegeven. Hierdoor verschijnen genen met een grotere statistische significantie hoger in de grafiek.
+De verticale stippellijnen geven de log2 fold change drempelwaarden aan (±1), terwijl de horizontale stippellijn de significantiedrempel voor de adjusted p-waarde (padj < 0,05) weergeeft.
+Genen die niet aan deze drempels voldoen zijn grijs weergegeven en worden als niet significant beschouwd. Genen die zowel een significante adjusted p-waarde als een log2 fold change buiten de drempelwaarden hebben, zijn oranje weergegeven. Deze genen worden beschouwd als differentieel geëxpresseerd.
+Aan de rechterzijde van de grafiek bevinden zich de upgereguleerde genen, met een positieve log2 fold change, wat betekent dat deze genen sterker tot expressie komen in één conditie ten opzichte van de andere. Aan de linkerzijde bevinden zich de downgereguleerde genen, met een negatieve log2 fold change.
+In totaal zijn 1456 genen upgereguleerd en 2066 genen downgereguleerd volgens de ingestelde significantiedrempels.
+
+
+In Figuur 4 de volcano plot laat zien dat er een groot aantal genen significant verschillend tot expressie komt tussen lever- en hersenweefsel. Zowel upgereguleerde als downgereguleerde genen zijn duidelijk zichtbaar, waarbij het aantal downgereguleerde genen iets groter is dan het aantal upgereguleerde genen.
+
+Daarnaast is te zien dat veel genen een relatief kleine log2 fold change en lage statistische significantie hebben en daarom als niet significant worden beschouwd. De genen die verder van het midden liggen en hoger in de grafiek voorkomen hebben zowel een grotere expressieverandering als een sterkere statistische ondersteuning.
+
+Dit suggereert dat de genexpressieprofielen van lever- en hersenweefsel duidelijk van elkaar verschillen en dat er een aanzienlijk aantal genen betrokken is bij de biologische verschillen tussen deze twee weefseltypen.
+
+## heatmap van de dge
+```{R heatmap2, echo=FALSE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
+# Zet resultaten om naar dataframe
+res_df <- as.data.frame(res)
+res_df$gene_id <- rownames(res_df)
+
+# Verwijder genen met ontbrekende waarden
+res_df <- res_df[!is.na(res_df$padj) & !is.na(res_df$log2FoldChange), ]
+
+# Selecteer top 5 upgereguleerde genen (kleinste adjusted p-waarde)
+top_up <- res_df[res_df$log2FoldChange > 0, ]
+top_up <- top_up[order(top_up$padj), ]
+top_up <- head(top_up, 5)
+
+# Selecteer top 5 downgereguleerde genen (kleinste adjusted p-waarde)
+top_down <- res_df[res_df$log2FoldChange < 0, ]
+top_down <- top_down[order(top_down$padj), ]
+top_down <- head(top_down, 5)
+
+# Combineer de geselecteerde genen
+top_genes <- c(top_up$gene_id, top_down$gene_id)
+
+# Haal genormaliseerde countwaarden op
+norm_counts <- counts(dge, normalized = TRUE)
+
+# Selecteer alleen de topgenen
+heatmap_mat <- norm_counts[top_genes, ]
+
+# Log2-transformatie voor betere vergelijkbaarheid
+heatmap_mat <- log2(heatmap_mat + 1)
+
+# Zet Entrez IDs om naar gensymbolen
+gene_symbols <- mapIds(
+  org.Hs.eg.db,
+  keys = rownames(heatmap_mat),
+  column = "SYMBOL",
+  keytype = "ENTREZID",
+  multiVals = "first"
+)
+
+# Gebruik originele ID als geen symbool beschikbaar is
+gene_symbols[is.na(gene_symbols)] <- rownames(heatmap_mat)[is.na(gene_symbols)]
+
+# Zet gensymbolen als rijnamen
+rownames(heatmap_mat) <- gene_symbols
+
+# Annotatie voor de samples
+annotation <- data.frame(
+  tissue = ifelse(
+    grepl("^brain", colnames(heatmap_mat), ignore.case = TRUE),
+    "Brein",
+    "Lever"
+  )
+)
+
+rownames(annotation) <- colnames(heatmap_mat)
+
+annotation$tissue <- factor(annotation$tissue,
+                            levels = c("Brein", "Lever"))
+
+# Zelfde kleuren als in je eerdere figuren
+ann_colors <- list(
+  tissue = c(
+    Brein = "#FFD166",  # geel
+    Lever = "#009E73"   # groen
+  )
+)
+
+# Heatmap maken
+pheatmap(
+  heatmap_mat,
+  annotation_col = annotation,
+  annotation_colors = ann_colors,
+  main = "Heatmap van top 5 up- en top 5 downgereguleerde genen",
+  angle_col = 45,
+  fontsize = 12,
+  fontsize_row = 10,
+  fontsize_col = 10,
+  scale = "row"
+)
+```
+Figuur 5. Heatmap van de 5 meest upgereguleerde en 5 meest downgereguleerde genen.
+De heatmap toont de genexpressiewaarden van de vijf genen met de kleinste adjusted p-waarde die zijn upgereguleerd en de vijf genen die zijn downgereguleerd in de DGE-analyse. De waarden zijn gebaseerd op genormaliseerde en VST-getransformeerde expressiewaarden.
+De rijen representeren genen en de kolommen representeren de verschillende samples. De kleurenschaal geeft de relatieve expressie weer: warme kleuren (rood/oranje) duiden op hogere expressie, terwijl koelere kleuren (blauw) lagere expressie aangeven.
+Boven de heatmap is het weefseltype van de samples weergegeven, waarbij lever groen is en brein geel. De dendrogrammen tonen de hiërarchische clustering van zowel de genen als de samples.
+
+
+
+In figuur 5 de heatmap laat zien dat de geselecteerde genen duidelijk verschillende expressiepatronen vertonen tussen lever- en hersenweefsel. De genen HRG, APOA2, APOC3, FGB en FGG vertonen een hogere expressie in levermonsters en een lagere expressie in hersenmonsters. Daarentegen laten genen zoals KIF1A, APLP1, MAP1A, CPLX2 en PCLO juist een hogere expressie zien in hersenmonsters en een lagere expressie in levermonsters.
+
+Daarnaast clusteren de samples op basis van hun weefseltype, waarbij lever- en hersensamples duidelijk van elkaar gescheiden worden. Dit bevestigt dat de differentieel geëxpresseerde genen sterk bijdragen aan de biologische verschillen tussen deze twee weefsels.
+
+## GO-term analyse
 
 
 
