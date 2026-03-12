@@ -277,36 +277,3 @@ De correlatieheatmap in figuur 3 toont dat de drie leversamples onderling een ho
 
 Beide figuren laten zien dat de samples clusteren op basis van weefseltype. Replicaten binnen hetzelfde weefsel vertonen sterke overeenkomst, terwijl lever- en breinweefsel duidelijk van elkaar verschillen in genexpressie. Dit wijst op consistente metingen en duidelijke biologische verschillen tussen de twee weefsels.
 
-## DGE analyse
-
-```{r, eval=TRUE}
-# ...............
-dge <- DESeq(
-    
-    object = ............... , # ...............
-)
-```
-
-## GO-term analyse
-
-```{r, eval=TRUE}
-test_object <- new(
-    
-    "GOHyperGParams",
-    
-    geneIds = ............... , # ...............
-    
-    universeGeneIds = ............... , # ...............
-    
-    annotation = ............... , # ...............
-    
-    ontology = ............... , # ...............
-    
-    pvalueCutoff = ............... , # ...............
-    
-    testDirection = ............... # ...............
-    )
-
-goterm_analysis <- hyperGTest(test_object)
-```
-
