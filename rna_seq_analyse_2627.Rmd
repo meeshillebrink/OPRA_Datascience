@@ -9,6 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE)
 ```
 
+# Laden van benodigde packages voor RNA-seq analyse
 ```{r, eval=TRUE, warning=FALSE, message=FALSE}
 library(tidyverse)
 library(Rsubread)
@@ -37,7 +38,7 @@ Met unique = TRUE zijn alleen reads meegenomen die op één duidelijke positie i
 
 De alignmentstatistieken zijn opgeslagen in het object alignment_statistics voor verdere analyse.
 
-```{r, include=FALSE, echo=TRUE}
+```{r, echo=TRUE, results='hide', message=FALSE, warning=FALSE}
 alignment_statistics <- align(
   
   index = "/home/data/opra4v/hg38_index/" , 
@@ -147,7 +148,7 @@ De PCA is uitgevoerd om te beoordelen of samples van hetzelfde weefsel bij elkaa
 
 ## Genereren van een genexpressie counttabel uit aligned reads
 
-```{r, echo=TRUE}
+```{r, echo=TRUE, results='hide', message=FALSE, warning=FALSE}
 
 # Genereren van een count-table
 
@@ -418,7 +419,8 @@ ggplot(res_df, aes(x = log2FoldChange, y = -log10(padj))) +
   ) +
   
   labs(
-    title = "Volcano plot van differentiële genexpressie van hersen- en leverweefsel",
+    title = "Volcano plot van differentiële genexpressie van 
+hersen- en leverweefsel",
     x = "log2 Fold Change",
     y = "-log10 adjusted p-waarde",
     color = "Significantie"
@@ -435,7 +437,7 @@ De tekst in het midden van de grafiek geeft het aantal genen weer dat significan
 
 <br>
 
-```{r}
+```{r, echo=TRUE}
 # significante genen filteren
 sig_genes <- res_df |>
   filter(padj < 0.05)
@@ -560,7 +562,7 @@ test_object_up <- new(
 )
 ```
 
-```{r}
+```{r, echo=TRUE}
 # Go-term analyse uitvoeren
 go_up <- hyperGTest(test_object_up)
 
@@ -574,11 +576,13 @@ top20_up <- go_up_results |>
 ```
 
 ```{r, echo=TRUE, fig.cap="Figuur 6: GO-term enrichment analyse van de twintig meest significant verrijkte biologische processen voor upgereguleerde genen. De grafiek toont de GO-termen op de y-as en de −log10 p-waarde op de x-as, waarbij hogere waarden een sterkere statistische verrijking aangeven."}
+
 ggplot(top20_up, aes(x = reorder(Term, Pvalue), y = -log10(Pvalue))) +
   geom_col(fill = "orange") +
   coord_flip() +
   labs(
-    title = "Top 20 verrijkte GO-termen voor upgereguleerde genen",
+    title = "Top 20 verrijkte GO-termen voor 
+upgereguleerde genen",
     x = "GO term",
     y = "-log10 p-waarde"
   ) +
@@ -638,7 +642,8 @@ ggplot(top20_down, aes(x = reorder(Term, Pvalue), y = -log10(Pvalue))) +
   geom_col(fill = "steelblue") +
   coord_flip() +
   labs(
-    title = "Top 20 verrijkte GO-termen voor downreguleerde genen",
+    title = "Top 20 verrijkte GO-termen voor
+downreguleerde genen",
     x = "GO term",
     y = "-log10 p-waarde"
   ) +
@@ -678,3 +683,25 @@ Samenvattend laat deze analyse zien dat hersen- en leverweefsel duidelijke versc
 <br>
 
 # Discussie van de analyse van genexpressieverschillen tussen hersen- en leverweefsel
+
+In deze analyse zijn duidelijke verschillen gevonden in genexpressie tussen lever- en hersenweefsel. Dit was zichtbaar in de PCA, de heatmap en de differentiële genexpressieanalyse. Toch zijn er enkele punten die belangrijk zijn om te bespreken bij het interpreteren van de resultaten.
+
+Een belangrijk discussiepunt is de variatie tussen de biologische replicaten. In de PCA is te zien dat de drie hersensamples wel samen clusteren, maar dat één sample verder van de andere twee ligt. Dit kan deels door technische factoren worden veroorzaakt, maar het kan ook een biologische verklaring hebben. Hersenweefsel bestaat namelijk uit verschillende celtypen, zoals neuronen, astrocyten en oligodendrocyten. Als de verhouding van deze celtypen tussen samples verschilt, kan dat invloed hebben op het gemeten genexpressieprofiel. Hierdoor kunnen samples van hetzelfde weefsel toch enige spreiding laten zien.
+
+Daarnaast is het aantal biologische replicaten relatief klein, met drie samples per weefsel. Hoewel dit voldoende is om duidelijke verschillen tussen lever en hersenen te zien, kan een klein aantal replicaten ervoor zorgen dat biologische variatie minder goed wordt weergegeven. Met meer replicaten kan beter worden onderzocht of verschillen tussen samples daadwerkelijk biologisch zijn of dat ze ontstaan door toevallige variatie in een kleine dataset.
+
+Een ander punt is dat de analyse is uitgevoerd op volledig weefsel. Zowel lever als hersenen bestaan uit meerdere verschillende celtypen. De gemeten genexpressie is daarom een gemiddelde van alle cellen in het weefsel. Hierdoor kunnen expressieverschillen die specifiek zijn voor bepaalde celtypen minder duidelijk zichtbaar worden.
+
+In een vervolgonderzoek zou het daarom nuttig zijn om meer biologische replicaten te gebruiken. Door bijvoorbeeld vijf tot tien samples per weefsel te analyseren kan de natuurlijke biologische variatie beter worden weergegeven. Dit maakt de resultaten betrouwbaarder en kan helpen om subtielere verschillen in genexpressie te detecteren.
+
+Daarnaast kan vooraf een uitgebreidere kwaliteitscontrole van de ruwe sequencingdata worden uitgevoerd. Bijvoorbeeld door de kwaliteit van de reads te controleren met een programma zoals FastQC (software die de kwaliteit van sequencingreads analyseert, bijvoorbeeld basekwaliteit, GC-inhoud en aanwezigheid van adapters). Als uit deze analyse blijkt dat er lage kwaliteit stukken of adaptersequenties aanwezig zijn, kunnen deze worden verwijderd met trimmingsoftware zoals Trimmomatic of Cutadapt. Hierdoor kunnen reads beter alignen op het referentiegenoom.
+
+Ook kan het nuttig zijn om extra controleplots van de RNA-seq data te maken voordat de differentiële genexpressieanalyse wordt uitgevoerd. Een voorbeeld hiervan is een MA-plot (een grafiek waarin het gemiddelde expressieniveau van genen wordt vergeleken met het verschil in expressie tussen twee condities). Met zo’n plot kan worden gecontroleerd of de normalisatie goed werkt en of er extreme outliers aanwezig zijn in de data.
+
+Voor vervolgonderzoek zijn daarnaast verschillende aanvullende analyses mogelijk. Zo kan een pathway-analyse worden uitgevoerd, bijvoorbeeld met databases zoals KEGG of Reactome. Hierbij wordt gekeken in welke metabole routes of signaalroutes de differentieel tot expressie komende genen een rol spelen. Dit kan helpen om beter te begrijpen hoe de gevonden genexpressieverschillen bijdragen aan de functies van lever en hersenen.
+
+Ook kan het interessant zijn om meer genen tegelijk te visualiseren in een heatmap, bijvoorbeeld de 50 of 100 meest differentieel tot expressie komende genen. Hierdoor kan beter worden bekeken of er duidelijke clusters van genen bestaan die specifiek zijn voor lever- of hersenweefsel.
+
+Verder kan het interessant zijn om genexpressie op celniveau te onderzoeken met technieken zoals single-cell RNA-sequencing (een methode waarbij genexpressie per individuele cel wordt gemeten in plaats van gemiddeld over een heel weefsel). Hiermee kan worden onderzocht welke genen specifiek actief zijn in bepaalde celtypen binnen lever- of hersenweefsel.
+
+Tot slot kan het waardevol zijn om de resultaten te combineren met andere typen biologische data, zoals eiwitdata of metabolomics. Hiermee kan worden onderzocht of verschillen in genexpressie ook leiden tot veranderingen in eiwitproductie of metabole processen.
