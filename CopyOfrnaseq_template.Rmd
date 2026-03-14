@@ -1,0 +1,427 @@
+---
+title: "Template voor het analyseren van RNA-seq data"
+author: "Bas van Gestel"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Setup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(Rsubread)
+library(DESeq2)
+library(GOstats)
+```
+
+# week 3: Alignment van RNA-seq data
+# intdoductie
+In dit project onderzoeken we welke genen verschillend tot expressie komen tussen het hersenweefsel en het leverweefsel.
+Om deze onderzoekvraag te beantwoorden analyseren we RNA-seq data van beide weefsels.De analyse bestaat uit meerdere stappen: eerste voeren we de alignment uit van de ruwe FASTQ-reads op het humane referentiegenoom (hg38), vervolgens tellen we het aantal reads per gen, en daarna bepalen we welke genen significant verschillend tot expressie zijn. De alignment vormt de basis voor alle vervolganalyses en is daarom een curciale stap in de workflow.
+
+#Toelichting op de alignment analyse
+Voor de alignment maken we gebruik van de `align()`functie uit het Rsubread‑pakket. We werken met zes FASTQ‑bestanden: drie afkomstig uit het hersenweefsel (hersenen) en drie uit het leverweefsel (lever). Deze bestanden zijn opgeslagen op de server in `/home/data/opra4v/fastq/`. De alignment wordt uitgevoerd tegen het humane referentiegenoom hg38, waarvan de vooraf geïndexeerde bestanden beschikbaar zijn in `/home/data/opra4v/hg38_index/`. In de R‑code geven we het pad naar deze index door via het argument `index`. Omdat de FASTQ‑bestanden gecomprimeerd zijn, gebruiken we `input_format = "gzFASTQ"`. De output van de alignment bestaat uit BAM‑bestanden (`output_format = "BAM"`). Daarnaast kiezen we voor `unique = TRUE`, zodat alleen reads die uniek op het genoom uitgelijnd zijn (uniquely mapped) worden meegenomen. Dit verhoogt de betrouwbaarheid van de downstream analyses. De alignmentstatistieken worden opgeslagen in de variabele `alignment_statistics`, zodat we deze later kunnen gebruiken voor het berekenen van het percentage uniquely mapped reads en het maken van een grafiek.
+```{r}
+library(Rsubread)
+library(ggplot2)
+```
+
+```{r paths}
+fastq_dir  <- "/home/data/opra4v/fastq/"
+index_base <- "/home/data/opra4v/hg38_index/hg38_index"
+```
+
+```{r}
+fastq_dir
+```
+
+```{r}
+fastq_dir
+```
+
+
+```{r}
+list.files(fastq_dir)
+```
+
+```{r}
+list.files(index_base)
+```
+
+```{r}
+all_fastq <- list.files(fastq_dir, full.names = TRUE)
+
+```
+
+#lever samples
+```{r}
+lever_fastq <- all_fastq[grepl("1208|1209|1210.", all_fastq)]
+```
+#hersen samples
+```{r}
+hersen_fastq <- all_fastq[grepl("1214|1215|1216", all_fastq)]
+```
+
+```{r}
+for (f in lever_fastq) {
+  sample_name <- gsub(".fastq.gz", "", basename(f))
+  align(
+    index = index_base,
+    readfile1 = f,
+    readfile2 = NULL,
+    type = "rna",
+    input_format = "gzFASTQ",
+    output_format = "BAM",
+    output_file = paste0(sample_name, "_aligned.bam"),
+    unique = TRUE,
+    nthreads = 4
+  )
+}
+
+```
+
+```{r}
+lever_fastq
+```
+
+```{r}
+for (f in hersen_fastq) {
+  sample_name <- gsub(".fastq.gz", "", basename(f))
+  align(
+    index = index_base,
+    readfile1 = f,
+    readfile2 = NULL,
+    type = "rna",
+    input_format = "gzFASTQ",
+    output_format = "BAM",
+    output_file = paste0(sample_name, "_aligned.bam"),
+    unique = TRUE,
+    nthreads = 30
+  )
+}
+
+```
+# alle bestanden in huidige map ophalen
+```{r}
+bam_files <- list.files(".",pattern = "bam$", full.names = TRUE)
+```
+#alignmentstatistieken per BAM-file berekenen
+```{r}
+alignment_statistics <- sapply(bam_files, function(bam) {
+  propmapped(bam)
+})
+```
+
+```{r}
+alignment_statistics
+```
+# Berekeningen
+```{r}
+unique_reads <- alignment_statistics["NumMapped",]
+total_reads <- alignment_statistics["NumTotal",]
+percent_unique <- as.numeric(alignment_statistics["PropMapped",]) * 100
+```
+# Dataframe bouwen
+```{r}
+df <- data.frame(
+  sample = colnames(alignment_statistics),
+  unique_reads = unique_reads,
+  total_reads = total_reads,
+  percent_unique = percent_unique
+)
+```
+# lever- en hersenmonsters selecteren
+```{r}
+lever_samples <- c("./SRR7961208_aligned.bam", "./SRR7961209_aligned.bam", "./SRR7961210_aligned.bam")
+brain_samples <- c("./SRR7961214_aligned.bam", "./SRR7961215_aligned.bam", "./SRR7961216_aligned.bam")
+```
+
+```{r}
+df_lever <- df[df$sample %in% lever_samples,]
+df_brain <- df[df$sample %in% brain_samples,]
+```
+
+
+```{r}
+ggplot(df_lever, aes(x = sample, y = percent_unique, fill = sample)) + geom_col() +
+  labs(
+    title = "Percentage uniek gemapte reads – Lever samples",
+        x = "Sample",
+        y = "Uniek gemapt (%)"
+        ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none")
+```
+
+```{r}
+colnames(alignment_statistics)
+```
+
+```{r}
+df_lever
+```
+
+```{r}
+ggplot(df_brain, aes(x = sample, y = percent_unique, fill = sample)) + geom_col() +
+  labs(
+    title = "Percentage uniek gemapte reads – Hersenen samples",
+        x = "Sample",
+        y = "Uniek gemapt (%)"
+        ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none")
+```
+# Week4
+
+```{r}
+fc <- featureCounts(
+  files = bam_files,
+  annot.inbuilt = "hg38",
+  annot.ext = NULL,
+  isGTFAnnotationFile = FALSE,
+  GTF.featureType = "exon",
+  GTF.attrType = "gene_id",
+  chrAliases = NULL,
+  allowMultiOverlap = FALSE,
+  minOverlap = 1,
+  largestOverlap = FALSE,
+  readExtension5 = 0,
+  readExtension3 = 0,
+  read2pos = NULL,
+  countMultiMappingReads = FALSE,
+  fraction = FALSE,
+  minMQS = 0,
+  splitOnly = FALSE,
+  nonSplitOnly = FALSE,
+  primaryOnly = FALSE,
+  ignoreDup = FALSE,
+  strandSpecific = 0,
+  juncCounts = FALSE,
+  genome = NULL,
+  isPairedEnd = FALSE,
+  nthreads = 30,
+)
+```
+
+```{r}
+count_table <- fc$counts
+```
+
+```{r}
+library(DESeq2)
+count_mat <- as.matrix(count_table)
+coldata <- data.frame(
+  row.names = colnames(count_mat),
+  tissue = c("lever", "lever", "lever", "brain", "brain", "brain")
+)
+
+```
+
+```{r}
+dds <- DESeqDataSetFromMatrix(
+  countData = count_mat,
+  colData = coldata,
+  design = ~ tissue
+)
+
+```
+
+```{r}
+dds <- dds[rowSums(counts(dds)) > 1, ]
+```
+
+```{r}
+vsd <- vst(dds)
+```
+
+
+```{r}
+plotPCA(vsd, intgroup = "tissue")
+```
+
+
+```{r}
+
+library(pheatmap)
+sample_cor <- cor(assay(vsd)) # bereken de correlatiematrix tussen de samples
+annotatie <- data.frame(
+  weefsel =coldata$tissue
+)  #maak annotatie voor de weefsels (tissue)
+rownames(annotatie) <- rownames(coldata)
+pheatmap(
+  sample_cor,
+  annotation_col = annotatie,
+  annotation_row = annotatie,
+  main = "correlatie Heatmap van de Samples",
+  fontsize = 12,
+  fontsize_row = 10,
+  fontsize_col = 10,
+  color = colorRampPalette(c("navy", "white", "firebrick3"))(50)
+)
+```
+
+
+# Opdracht 5 inleiding.
+In deze opdracht onderzoeken we welke genen verschillend tot expressie komen tussen leverweefsel en hersenweefsel. Met de ruwe count‑data bouwen we een DESeq2‑object waarin zowel de expressiewaarden als het design (lever vs. hersenen) zijn vastgelegd. Dit object vormt de basis voor de DGE analyse, waarbij voor elk gen de log2 fold change en de adjusted p‑waarde worden berekend om te bepalen of het gen hoger of lager tot expressie komt in één van de twee weefsels.
+
+De resultaten visualiseren we eerst in een volcano plot, waarin duidelijk zichtbaar wordt welke genen significant up‑ of downgereguleerd zijn tussen lever en hersenen. Vervolgens selecteren we de meest significante genen uit beide richtingen en tonen hun genormaliseerde expressiewaarden in een heatmap, waarbij we de Entrez‑ID’s omzetten naar gensymbolen met mapIds. Op deze manier krijgen we een helder beeld van de belangrijkste expressieverschillen tussen lever‑ en hersenweefsel.
+```{r}
+# DESeq analyse uitvoeren op het gefilterde dds object
+dds <- DESeq(dds)
+```
+
+```{r}
+# Resultaten ophalen van de DESeq analyse 
+res <- results(dds)
+# Resultaten sorteren op adjusted p-value 
+res <- res[order(res$padj), ]
+# Eerste regels bekijken
+head(res)
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# 1. Maak dataframe zonder NA's
+dge_plotting <- data.frame(res) |>
+  filter(!is.na(padj))
+
+# 2. Definieer thresholds
+lfc_thresh <- 1
+padj_thresh <- 0.05
+
+# 3. Voeg kolom toe voor up/down significante genen
+dge_plotting <- dge_plotting |>
+  mutate(
+    regulation = case_when(
+      padj < padj_thresh & log2FoldChange >  lfc_thresh ~ "Upregulated",
+      padj < padj_thresh & log2FoldChange < -lfc_thresh ~ "Downregulated",
+      TRUE ~ "Not significant"
+    )
+  )
+
+# 4. Tel up- en downregulated genen
+n_up   <- sum(dge_plotting$regulation == "Upregulated")
+n_down <- sum(dge_plotting$regulation == "Downregulated")
+
+# 5. Volcano plot maken
+ggplot(dge_plotting, aes(x = log2FoldChange, 
+                         y = -log10(padj), 
+                         color = regulation)) +
+  geom_point(alpha = 0.7) +
+  
+  # thresholds als stippellijnen
+  geom_vline(xintercept = c(-lfc_thresh, lfc_thresh), 
+             linetype = "dashed", color = "black") +
+  geom_hline(yintercept = -log10(padj_thresh), 
+             linetype = "dashed", color = "black") +
+  
+  # kleuren instellen
+  scale_color_manual(values = c(
+    "Upregulated" = "orange",
+    "Downregulated" = "orange",
+    "Not significant" = "grey"
+  )) +
+  
+  # labels toevoegen voor aantallen
+  annotate("text", x = max(dge_plotting$log2FoldChange), 
+           y = max(-log10(dge_plotting$padj)) * 0.95,
+           label = paste("Upregulated:", n_up),
+           hjust = 1, color = "orange", size = 5) +
+  
+  annotate("text", x = min(dge_plotting$log2FoldChange), 
+           y = max(-log10(dge_plotting$padj)) * 0.95,
+           label = paste("Downregulated:", n_down),
+           hjust = 0, color = "orange", size = 5) +
+  
+  theme_bw() +
+  xlab("log2 Fold Change") +
+  ylab("-log10 adjusted p-value") +
+  ggtitle("Volcano plot – differentiële genexpressie (alpha = 0.05)") +
+  labs(color = "Regulatie")
+```
+Deze volcano plot toont de differentiële genexpressie tussen hersenen en lever. Op de x‑as staat de log2 fold change, waarbij negatieve waarden genen aangeven die hoger tot expressie komen in de hersenen, en positieve waarden genen die hoger tot expressie komen in de lever. De y‑as geeft de –log10 van de aangepaste p‑waarde weer. De gestippelde lijnen markeren de drempelwaarden voor zowel de fold change als de p‑waarde. De oranje punten vertegenwoordigen de significant gereguleerde genen. Links in de grafiek staat het aantal down‑gereguleerde (hersenen‑specifieke) genen, en rechts het aantal up‑gereguleerde (lever‑specifieke) genen.
+
+```{r, eval=FALSE}
+library(dplyr)
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+library(pheatmap)
+
+# 0. Zet DESeqResults om naar data frame
+res_df <- as.data.frame(res)
+
+# 1. Selecteer de 5 meest significante up- en down-gereguleerde genen
+lfc_thresh <- 1
+padj_thresh <- 0.05
+
+# Upregulated
+top_up <- res_df |>
+  filter(!is.na(padj),
+         padj < padj_thresh,
+         log2FoldChange > lfc_thresh) |>
+  arrange(padj) |>
+  slice(1:5)
+
+# Downregulated
+top_down <- res_df |>
+  filter(!is.na(padj),
+         padj < padj_thresh,
+         log2FoldChange < -lfc_thresh) |>
+  arrange(padj) |>
+  slice(1:5)
+
+# Combineer de 10 genen
+top10 <- rbind(top_up, top_down)
+
+# 2. Zet Entrez IDs om naar gen symbolen
+symbols <- mapIds(
+  org.Hs.eg.db,
+  keys = rownames(top10),
+  column = "SYMBOL",
+  keytype = "ENTREZID",
+  multiVals = "first"
+)
+vsd <- vst(dds)
+# 3. Haal de genormaliseerde expressiewaarden op (VST)
+top_mat <- assay(vsd)[rownames(top10), ]
+
+# 4. Vervang de rij-namen door de gen symbolen
+rownames(top_mat) <- symbols
+
+# 5. Annotatie voor de samples
+annotatie <- data.frame(
+  tissue = coldata$tissue
+)
+rownames(annotatie) <- rownames(coldata)
+
+# 6. Heatmap maken
+pheatmap(
+  top_mat,
+  scale = "row",
+  annotation_col = annotatie,
+  main = "Heatmap van top 5 up- en top 5 down-gereguleerde genen",
+  fontsize = 10,
+  color = colorRampPalette(c("navy", "white", "firebrick3"))(50)
+)
+```
+Deze heatmap toont de genormaliseerde expressiewaarden (VST) van de 5 sterkst upgereguleerde en de 5 sterkst downgereguleerde genen tussen hersenen en lever. De rijen zijn gelabeld met officiële gensymbolen, verkregen via mapIds. De kleurenschaal (blauw–wit–rood) geeft de relatieve expressie per gen weer na rij‑normalisatie (scale = ‘row’). De kolomannotatie geeft het weefseltype van elke sample weer (hersenen in turquoise, lever in roze). De clustering van de kolommen laat zien dat de hersenmonsters en levermonsters duidelijk van elkaar gescheiden clusteren op basis van de expressie van deze tien meest significante genen
+
+# Conclusie
+Op basis van de differentiële expressieanalyse laten zowel de volcano plot als de heatmap zien dat er een duidelijk onderscheid bestaat tussen hersenen en lever op het niveau van genexpressie. De volcano plot toont dat een groot aantal genen significant verschillend tot expressie komt tussen beide weefsels, met meer dan tweeduizend genen die hoger tot expressie komen in de hersenen en ongeveer vijftienhonderd genen die hoger tot expressie komen in de lever. Dit bevestigt dat de twee weefsels sterk van elkaar verschillen in hun moleculaire functies.
+
+De heatmap van de top 5 up‑ en top 5 down‑gereguleerde genen laat bovendien zien dat de monsters volledig clusteren volgens weefseltype. De hersenmonsters vertonen een consistent expressiepatroon dat duidelijk afwijkt van dat van de levermonsters. Dit onderstreept dat de geselecteerde genen robuuste markers zijn voor het onderscheid tussen beide weefsels.
+
+Gezamenlijk bevestigen deze resultaten dat hersenen en lever sterk verschillende transcriptieprofielen hebben, wat overeenkomt met hun uiteenlopende biologische functies.
+
+
+
+
+
