@@ -295,8 +295,8 @@ annotation$tissue <- factor(annotation$tissue,
 # Deze kleuren staan los van de correlatiekleuren.
 ann_colors <- list(
   tissue = c(
-    Brein = "#FFD166",  # geel
-    Lever = "#009E73"   # groen
+    "Brein" = "#007A4D",
+    "Lever" = "#F0E442"
   )
 )
 
@@ -524,7 +524,7 @@ pheatmap(
   scale = "row",
   annotation_col = annotation,
   annotation_colors = ann_colors,
-  main = "Top differentieël tot expressie komende genen"
+  main = "Top differentieël tot expressie komende genen",
 )
 ```
 
