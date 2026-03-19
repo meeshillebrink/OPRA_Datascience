@@ -184,6 +184,8 @@ read_counts <- featureCounts(
 
 # Countmatrix uit list halen
 countDatamatrix <- read_counts$counts
+# Verwijder '.bam' uit sample namen
+colnames(countDatamatrix) <- gsub("\\.bam$", "", colnames(countDatamatrix))
 
 # Metadata maken/definieren
 metadata_coldata <- data.frame(
@@ -709,16 +711,19 @@ Samen laten de resultaten van de GO-term analyse zien dat de differentiële gene
 
 # Conclusie van de analyse van genexpressieverschillen tussen hersen- en leverweefsel
 
-In dit project is onderzocht welke verschillen in genexpressie aanwezig zijn tussen hersen- en leverweefsel en welke biologische processen hiermee samenhangen. De resultaten van de RNA-seq analyse laten zien dat er duidelijke verschillen bestaan in genexpressie tussen beide weefsels. Zowel de principal component analyse als de correlatieheatmap tonen aan dat samples sterk clusteren op basis van weefseltype. Replicaten binnen hetzelfde weefsel vertonen vergelijkbare genexpressieprofielen, terwijl lever- en hersensamples duidelijk van elkaar gescheiden zijn. Dit wijst erop dat het weefseltype een belangrijke bepalende factor is voor het genexpressiepatroon.
+In dit project is onderzocht welke verschillen in genexpressie aanwezig zijn tussen hersen- en leverweefsel en welke biologische processen hiermee samenhangen. De resultaten van de RNA-seq analyse laten zien dat er duidelijke verschillen bestaan in genexpressie tussen beide weefsels.
 
-De differentiële genexpressieanalyse bevestigt deze observatie en laat zien dat een groot aantal genen significant verschillend tot expressie komt tussen lever- en hersenweefsel. De volcano plot toont dat duizenden genen een significant verschil in expressie vertonen volgens de ingestelde drempelwaarden voor log2 fold change en adjusted p-waarde. Tegelijkertijd zijn er ook genen die vergelijkbare expressieniveaus hebben in beide weefsels, wat aangeeft dat naast weefselspecifieke genexpressie ook gedeelde basale expressiepatronen aanwezig zijn.
+Allereerst blijkt uit de kwaliteitscontrole en alignments dat het percentage uniek gealigneerde reads weliswaar varieert tussen de monsters, maar over het algemeen voldoende hoog is om betrouwbare downstream analyses uit te voeren. Dit ondersteunt de validiteit van de verkregen resultaten.
 
-De heatmap van de meest significant differentieel tot expressie komende genen laat duidelijke weefselspecifieke expressiepatronen zien. Genen zoals FGB, FGG, APOA2, HRG en APOC3 vertonen een hogere expressie in leverweefsel en zijn betrokken bij processen zoals bloedstolling en lipidenmetabolisme, die kenmerkend zijn voor de functie van de lever. Daarentegen vertonen genen zoals KIF1A, APLP1, PCLO, CPLX2 en MAP1A een hogere expressie in hersenweefsel en spelen zij een rol in neuronale processen, waaronder synaptische signaaloverdracht en neuronale structuur.
+Zowel de principal component analyse (PCA) als de correlatieheatmap tonen aan dat samples sterk clusteren op basis van weefseltype. Replicaten binnen hetzelfde weefsel vertonen vergelijkbare genexpressieprofielen, terwijl lever- en hersensamples duidelijk van elkaar gescheiden zijn. Dit wijst erop dat het weefseltype een belangrijke bepalende factor is voor het genexpressiepatroon.
 
-De GO-term enrichment analyse bevestigt deze functionele verschillen op procesniveau. Genen die hoger tot expressie komen in leverweefsel zijn voornamelijk verrijkt voor metabole processen, waaronder het metabolisme van kleine moleculen, vetzuren en andere organische stoffen. Genen die relatief hoger tot expressie komen in hersenweefsel zijn daarentegen verrijkt voor biologische processen die gerelateerd zijn aan neuronale ontwikkeling en synaptische communicatie.
+De differentiële genexpressieanalyse (DGE) bevestigt deze observatie en laat zien dat een groot aantal genen significant verschillend tot expressie komt tussen lever- en hersenweefsel. De volcano plot toont dat duizenden genen een significant verschil in expressie vertonen volgens de ingestelde drempelwaarden voor log2 fold change en adjusted p-waarde. Concreet zijn 1456 genen hoger tot expressie gebracht in leverweefsel (upregulated), terwijl 2066 genen hoger tot expressie komen in hersenweefsel (downregulated in lever). Tegelijkertijd zijn er ook genen die vergelijkbare expressieniveaus hebben in beide weefsels, wat aangeeft dat naast weefselspecifieke genexpressie ook gedeelde basale expressiepatronen aanwezig zijn.
 
-Samenvattend laat deze analyse zien dat hersen- en leverweefsel duidelijke verschillen vertonen in genexpressie en dat deze verschillen samenhangen met biologische processen die passen bij de gespecialiseerde functies van beide weefsels. Leverweefsel wordt gekenmerkt door genexpressie die betrokken is bij metabolisme en detoxificatie, terwijl hersenweefsel voornamelijk genen tot expressie brengt die een rol spelen in neuronale ontwikkeling en synaptische signaaloverdracht.
+De heatmap van de meest significant differentieel tot expressie komende genen laat duidelijke weefselspecifieke expressiepatronen zien en bevestigt dat deze genen consistent tot expressie komen binnen elk weefseltype. Genen zoals FGB, FGG, APOA2, HRG en APOC3 vertonen een hogere expressie in leverweefsel en zijn betrokken bij processen zoals bloedstolling en lipidenmetabolisme, die kenmerkend zijn voor de functie van de lever. Daarentegen vertonen genen zoals KIF1A, APLP1, PCLO, CPLX2 en MAP1A een hogere expressie in hersenweefsel en spelen zij een rol in neuronale processen, waaronder synaptische signaaloverdracht en neuronale structuur.
 
+De GO-term enrichment analyse bevestigt deze functionele verschillen op procesniveau. Genen die hoger tot expressie komen in leverweefsel zijn verrijkt voor metabole processen, zoals het metabolisme van organische zuren, oxozuren, vetzuren en andere kleine moleculen, wat overeenkomt met de centrale rol van de lever in metabolische verwerking en detoxificatie. Genen die relatief hoger tot expressie komen in hersenweefsel zijn daarentegen verrijkt voor neuronale processen, zoals synaptische signalering, neuronale ontwikkeling en communicatie tussen zenuwcellen, wat typerend is voor hersenweefsel.
+
+Samenvattend laat deze analyse zien dat hersen- en leverweefsel duidelijke en biologisch betekenisvolle verschillen vertonen in genexpressie. Deze verschillen hangen nauw samen met de gespecialiseerde functies van beide weefsels: leverweefsel wordt gekenmerkt door genexpressie gericht op metabolisme en verwerking van stoffen, terwijl hersenweefsel voornamelijk genen tot expressie brengt die betrokken zijn bij neuronale functies en synaptische signaaloverdracht.
 <br>
 
 # Discussie van de analyse van genexpressieverschillen tussen hersen- en leverweefsel
