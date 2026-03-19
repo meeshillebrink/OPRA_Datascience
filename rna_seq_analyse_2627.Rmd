@@ -284,7 +284,7 @@ pheatmap(
 )
 ```
 
-Figuur 3 toont de correlatie tussen de genexpressieprofielen van alle samples op basis van de variance-gestabiliseerde RNA-seq data. De kleur van elk vakje geeft de sterkte van de correlatie tussen twee samples weer, waarbij hogere correlaties worden weergegeven in warmere kleuren (rood) en lagere correlaties in koelere kleuren (blauw). De schaal naast de heatmap toont de bijbehorende correlatiecoëfficiënten.
+De grafiek in figuur 3 toont de correlatie tussen de genexpressieprofielen van alle samples op basis van de variance-gestabiliseerde RNA-seq data. De kleur van elk vakje geeft de sterkte van de correlatie tussen twee samples weer, waarbij hogere correlaties worden weergegeven in warmere kleuren (rood) en lagere correlaties in koelere kleuren (blauw). De schaal naast de heatmap toont de bijbehorende correlatiecoëfficiënten.
 
 De drie leversamples vertonen onderling een hoge correlatie en clusteren samen in het dendrogram. Dit is ook zichtbaar in de annotatiebalk boven de heatmap, waar deze samples in geel zijn aangeduid. De drie hersensamples vertonen eveneens een sterke onderlinge correlatie en vormen een aparte cluster, aangeduid in groen. Dit patroon laat zien dat samples met hetzelfde weefseltype vergelijkbare genexpressieprofielen hebben.
 
@@ -429,7 +429,7 @@ hersen- en leverweefsel",
   theme_minimal()
 ```
 
-Figuur 4 toont een volcano plot met de resultaten van de differentiële genexpressieanalyse tussen hersen- en leverweefsel. Elk punt in de grafiek vertegenwoordigt één gen. De x-as geeft de log2 fold change weer, wat het verschil in expressieniveau tussen de twee weefsels weergeeft. Positieve waarden duiden op een hogere expressie in één weefsel, terwijl negatieve waarden wijzen op een hogere expressie in het andere weefsel. De y-as toont de negatieve log10 van de adjusted p-waarde, waardoor genen met een lagere p-waarde hoger in de grafiek verschijnen en dus statistisch significanter zijn.
+De grafiek in figuur 4 toont een volcano plot met de resultaten van de differentiële genexpressieanalyse tussen hersen- en leverweefsel. Elk punt in de grafiek vertegenwoordigt één gen. De x-as geeft de log2 fold change weer, wat het verschil in expressieniveau tussen de twee weefsels weergeeft. Positieve waarden duiden op een hogere expressie in één weefsel, terwijl negatieve waarden wijzen op een hogere expressie in het andere weefsel. De y-as toont de negatieve log10 van de adjusted p-waarde, waardoor genen met een lagere p-waarde hoger in de grafiek verschijnen en dus statistisch significanter zijn.
 
 Genen die voldoen aan de ingestelde thresholds voor zowel de adjusted p-waarde (padj < 0,05) als de log2 fold change (|log2FC| > 1) zijn weergegeven in oranje. Genen die niet aan deze criteria voldoen worden in grijs weergegeven. De verticale stippellijnen markeren de grenswaarden voor de log2 fold change, terwijl de horizontale stippellijn de grens voor de adjusted p-waarde aangeeft.
 
