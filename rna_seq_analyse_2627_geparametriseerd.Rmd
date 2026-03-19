@@ -1,0 +1,542 @@
+---
+title: "Analyse van genexpressieverschillen tussen `r params$tissue_A` en `r params$tissue_B`"
+author: "Chelaysiah Steba"
+date: "`r Sys.Date()`"
+output: html_document
+params:
+  tissue_A: "Hersenen"
+  tissue_B: "Lever"
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r, eval=TRUE, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(Rsubread)
+library(DESeq2)
+library(GOstats)
+library(pheatmap)
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+```
+
+```{r alignment, results='hide', message=FALSE, warning=FALSE}
+
+# Lookup tabel voor FASTQ-bestanden per weefsel
+fastq_lookup <- list(
+  Lever = c("SRR7961208.fastq.gz", "SRR7961209.fastq.gz", "SRR7961210.fastq.gz"),
+  Nier = c("SRR7961196.fastq.gz", "SRR7961197.fastq.gz", "SRR7961198.fastq.gz"),
+  Hersenen = c("SRR7961214.fastq.gz", "SRR7961215.fastq.gz", "SRR7961216.fastq.gz")
+)
+
+# FASTQ-bestanden ophalen op basis van parameters
+fastq_A <- fastq_lookup[[params$tissue_A]]
+fastq_B <- fastq_lookup[[params$tissue_B]]
+
+fastq_files <- file.path("/home/data/opra4v/fastq/", c(fastq_A, fastq_B))
+
+# Dynamische BAM-bestandsnamen genereren
+make_bam_names <- function(tissue) {
+  paste0(tolower(tissue), "_", 1:3, ".bam")
+}
+
+bam_A <- make_bam_names(params$tissue_A)
+bam_B <- make_bam_names(params$tissue_B)
+
+bam_files <- file.path(tempdir(), c(bam_A, bam_B))
+
+# Alignment uitvoeren
+alignment_statistics <- align(
+  index = "/home/data/opra4v/hg38_index/hg38_index",
+  readfile1 = fastq_files,
+  type = 0,
+  input_format = "gzFASTQ",
+  output_format = "BAM",
+  output_file = bam_files,
+  unique = TRUE,
+  nthreads = 30
+)
+```
+ 
+
+
+```{r fig.cap = sprintf("Figuur 1: Percentage uniek aligned reads per BAM-bestand voor %s- en %s-samples na alignment van RNA-seq reads tegen het humane referentiegenoom hg38.", params$tissue_A, params$tissue_B), message=FALSE, warning=FALSE}
+
+# Percentage uniquely aligned reads berekenen
+unique_reads <- alignment_statistics["Uniquely_mapped_reads", ]
+total_reads  <- alignment_statistics["Total_reads", ]
+percent_unique <- (unique_reads / total_reads) * 100
+
+# BAM-bestandsnamen ophalen
+bam_files <- colnames(alignment_statistics)
+
+# Dynamische weefsel-labels bepalen (case-insensitive)
+tissue_labels <- ifelse(
+  grepl(params$tissue_A, bam_files, ignore.case = TRUE),
+  params$tissue_A,
+  params$tissue_B
+)
+
+# Dataframe maken
+alignment_df <- data.frame(
+  BAM = bam_files,
+  PercentUnique = as.numeric(percent_unique),
+  Tissue = tissue_labels
+)
+
+# Dynamische kleuren
+tissue_colors <- setNames(
+  c("#007A4D", "#F0E442"),
+  c(params$tissue_A, params$tissue_B)
+)
+
+# Plot maken
+bam_staafdiagram <- ggplot(alignment_df, aes(x = BAM, y = PercentUnique, fill = Tissue)) +
+  geom_col() +
+  scale_fill_manual(values = tissue_colors) +
+  labs(
+    title = sprintf("Percentage uniek gemapte reads voor %s en %s",
+                    params$tissue_A, params$tissue_B),
+    x = NULL,
+    y = "Percentage uniek gemapte reads (%)",
+    fill = "Weefsel"
+  ) +
+  theme_minimal()
+
+# Plot tonen
+bam_staafdiagram
+```
+
+
+```{r, results='hide', message=FALSE, warning=FALSE}
+
+# Dynamische BAM-bestanden ophalen op basis van parameters
+
+# Helperfunctie om BAM-namen te genereren
+make_bam_names <- function(tissue) {
+  paste0(tolower(tissue), "_", 1:3, ".bam")
+}
+
+# BAM-bestanden voor beide weefsels
+bam_A <- make_bam_names(params$tissue_A)
+bam_B <- make_bam_names(params$tissue_B)
+
+bam_files <- file.path("aligned_bam", c(bam_A, bam_B))
+
+# featureCounts uitvoeren
+
+read_counts <- featureCounts(
+  files = bam_files,
+  annot.inbuilt = "hg38",
+  useMetaFeatures = TRUE,
+  strandSpecific = 0,
+  isPairedEnd = FALSE,
+  nthreads = 30
+)
+```
+
+
+```{r}
+# Countmatrix uit featureCounts-resultaat halen
+countDatamatrix <- read_counts$counts
+
+# Aantal replicaten per weefsel bepalen (hier 3, maar dynamisch mogelijk)
+n_A <- length(grep(tolower(params$tissue_A), colnames(countDatamatrix)))
+n_B <- length(grep(tolower(params$tissue_B), colnames(countDatamatrix)))
+
+# Metadata dynamisch genereren op basis van BAM-volgorde
+metadata_coldata <- data.frame(
+  row.names = colnames(countDatamatrix),
+  weefsel = c(
+    rep(params$tissue_A, n_A),
+    rep(params$tissue_B, n_B)
+  )
+)
+
+# DESeq2 object aanmaken
+dds <- DESeqDataSetFromMatrix(
+  countData = countDatamatrix,
+  colData = metadata_coldata,
+  design = ~ weefsel
+)
+```
+
+
+```{r fig.cap = sprintf( "Figuur 2: Principal component analyse van samples van %s en %s op basis van variance‑gestabiliseerde genexpressiewaarden. De assen tonen de eerste twee principal components en het percentage verklaarde variantie.", params$tissue_A, params$tissue_B), message=FALSE, warning=FALSE}
+
+# Variance stabilizing transformation
+vsd <- vst(dds, blind = FALSE)
+
+# Matrix met getransformeerde waarden
+vsd_matrix <- assay(vsd)
+
+# PCA uitvoeren
+pca <- prcomp(t(vsd_matrix))
+
+# Dataframe voor plotten
+pca_plotting <- data.frame(
+  PC1 = pca$x[, 1],
+  PC2 = pca$x[, 2],
+  weefsel = metadata_coldata$weefsel,
+  sample = rownames(pca$x)
+)
+
+# Percentage verklaarde variantie
+PC1_var <- round(100 * summary(pca)$importance[2, 1], 1)
+PC2_var <- round(100 * summary(pca)$importance[2, 2], 1)
+
+# Dynamische kleuren
+tissue_colors <- c(
+  params$tissue_A = "#007A4D",
+  params$tissue_B = "#F0E442"
+)
+
+# Plot
+ggplot(pca_plotting, aes(x = PC1, y = PC2)) +
+  geom_point(aes(color = weefsel), size = 3) +
+  scale_color_manual(values = tissue_colors) +
+  ggtitle(
+    paste("Groepsscheiding van", params$tissue_A, "en", params$tissue_B, "samples")
+  ) +
+  xlab(paste0("PC1 (", PC1_var, "%)")) +
+  ylab(paste0("PC2 (", PC2_var, "%)")) +
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    text = element_text(size = 14)
+  )
+```
+
+
+
+```{r fig.cap = sprintf( "Figuur 3: Correlatieheatmap van variance‑gestabiliseerde genexpressiewaarden van samples van %s en %s. De kleurenschaal geeft de correlatiecoëfficiënt tussen samples weer. De gekleurde balk boven de heatmap geeft het weefseltype aan, terwijl de dendrogrammen de hiërarchische clustering van de samples tonen op basis van hun genexpressieprofielen.", params$tissue_A, params$tissue_B), message=FALSE, warning=FALSE}
+
+# Variance stabilizing transformation
+vsd <- vst(dds, blind = FALSE)
+
+# Matrix met getransformeerde waarden
+vsd_matrix <- assay(vsd)
+
+# Correlatiematrix berekenen
+cor_matrix <- cor(vsd_matrix)
+
+# Annotatie dataframe voor weefseltype
+annotation_col <- data.frame(
+  Weefsel = metadata_coldata$weefsel
+)
+rownames(annotation_col) <- colnames(vsd_matrix)
+
+# Dynamische kleuren voor weefsels
+annotation_colors <- list(
+  Weefsel = c(
+    params$tissue_A = "#007A4D",
+    params$tissue_B = "#F0E442"
+  )
+)
+
+# Heatmap plotten
+pheatmap(
+  cor_matrix,
+  annotation_col = annotation_col,
+  annotation_colors = annotation_colors,
+  main = sprintf("Correlatie tussen %s- en %s-samples", params$tissue_A, params$tissue_B),
+  fontsize_row = 10,
+  fontsize_col = 10,
+  border_color = NA
+)
+```
+
+
+```{r, eval=TRUE}
+
+# DESeq2 analyse uitvoeren
+dge <- DESeq(dds)
+
+# Resultaten ophalen voor de vergelijking tissue_A vs tissue_B
+res <- results(
+  dge,
+  contrast = c("weefsel", params$tissue_A, params$tissue_B)
+)
+
+# Omzetten naar dataframe
+res_df <- as.data.frame(res)
+
+# Entrez IDs toevoegen
+res_df$entrez <- rownames(res_df)
+```
+
+
+```{r}
+
+# Thresholds instellen
+lfc_threshold <- 1
+padj_threshold <- 0.05
+
+# Kolom 'significant' initialiseren
+res_df$significant <- "niet significant"
+
+# Genen markeren als significant op basis van thresholds
+res_df$significant[
+  res_df$padj < padj_threshold &
+  abs(res_df$log2FoldChange) > lfc_threshold
+] <- "significant"
+```
+
+```{r}
+
+# Aantal up- en downregulated genen tellen
+upregulated <- sum(
+  res_df$padj < padj_threshold &
+  res_df$log2FoldChange > lfc_threshold,
+  na.rm = TRUE
+)
+
+downregulated <- sum(
+  res_df$padj < padj_threshold &
+  res_df$log2FoldChange < -lfc_threshold,
+  na.rm = TRUE
+)
+```
+
+
+```{r, fig.cap = sprintf( "Figuur 4: Volcano plot van differentiële genexpressie tussen %s- en %s-weefsel. De genen worden weergegeven als punten waarbij de log2 fold change op de x‑as staat en de negatieve log10 van de adjusted p‑waarde op de y‑as. Significante genen zijn weergegeven in oranje en niet‑significante genen in grijs. De verticale stippellijnen geven de ingestelde log2 fold change thresholds (%s en %s) weer en de horizontale stippellijn geeft de threshold voor de adjusted p‑waarde weer.", params$tissue_A, params$tissue_B, -lfc_threshold,lfc_threshold)}
+
+ggplot(res_df, aes(x = log2FoldChange, y = -log10(padj))) +
+  
+  # Punten
+  geom_point(aes(color = significant), alpha = 0.6, size = 2) +
+  
+  # Kleuren voor significantie
+  scale_color_manual(
+    values = c(
+      "significant" = "orange",
+      "niet significant" = "grey"
+    )
+  ) +
+  
+  # Verticale thresholds (log2FC)
+  geom_vline(
+    xintercept = c(-lfc_threshold, lfc_threshold),
+    linetype = "dashed"
+  ) +
+  
+  # Horizontale threshold (padj)
+  geom_hline(
+    yintercept = -log10(padj_threshold),
+    linetype = "dashed"
+  ) +
+  
+  # Annotaties voor aantallen
+  annotate(
+    "text",
+    x = -abs(lfc_threshold) * 2,
+    y = max(-log10(res_df$padj), na.rm = TRUE) * 0.95,
+    label = paste("Downregulated (n =", downregulated, ")"),
+    hjust = 1,
+    size = 4
+  ) +
+  
+  annotate(
+    "text",
+    x = abs(lfc_threshold) * 2,
+    y = max(-log10(res_df$padj), na.rm = TRUE) * 0.95,
+    label = paste("Upregulated (n =", upregulated, ")"),
+    hjust = 0,
+    size = 4
+  ) +
+  
+  # Labels en dynamische titel
+  labs(
+    title = sprintf(
+      "Volcano plot van differentiële genexpressie tussen %s- en %s-weefsel",
+      params$tissue_A, params$tissue_B
+    ),
+    x = "log2 Fold Change",
+    y = "-log10 adjusted p-waarde",
+    color = "Significantie"
+  ) +
+  
+  theme_minimal()
+```
+
+
+
+```{r}
+
+# Significante genen filteren
+sig_genes <- res_df |>
+  filter(padj < padj_threshold)
+
+# Top 5 upregulated genen
+top_up <- sig_genes |>
+  filter(log2FoldChange > 0) |>
+  arrange(padj) |>
+  head(5)
+
+# Top 5 downregulated genen
+top_down <- sig_genes |>
+  filter(log2FoldChange < 0) |>
+  arrange(padj) |>
+  head(5)
+
+# Combineren van topgenen
+top_genes <- rbind(top_up, top_down)
+```
+
+
+```{r}
+
+# Genormaliseerde counts berekenen
+normalized_counts <- counts(dge, normalized = TRUE)
+
+# Alleen topgenen selecteren
+available_genes <- intersect(top_genes$entrez, rownames(normalized_counts))
+
+heatmap_matrix <- normalized_counts[available_genes, ]
+```
+
+```{r}
+# Entrez ID omzetten naar gensymbool
+gene_symbols <- mapIds(
+  org.Hs.eg.db,
+  keys = rownames(heatmap_matrix),
+  column = "SYMBOL",
+  keytype = "ENTREZID",
+  multiVals = "first"
+)
+
+# NA-symbolen vervangen door de originele Entrez ID
+gene_symbols[is.na(gene_symbols)] <- rownames(heatmap_matrix)[is.na(gene_symbols)]
+
+# Nieuwe rownames instellen
+rownames(heatmap_matrix) <- gene_symbols
+```
+
+
+```{r, fig.cap = sprintf("Figuur 5: Heatmap van de genormaliseerde expressiewaarden van de meest significant differentieel tot expressie komende genen tussen %s- en %s-weefsel. De rijen tonen de geselecteerde genen en de kolommen tonen de individuele samples van %s- en %s-weefsel. De kleuren geven de geschaalde genexpressie weer, waarbij rood een relatief hogere expressie aangeeft en blauw een lagere expressie. De balk boven de heatmap geeft het weefseltype van de samples weer.", params$tissue_A, params$tissue_B, params$tissue_A, params$tissue_B)}
+
+pheatmap(
+  heatmap_matrix,
+  scale = "row",
+  annotation_col = annotation_col,
+  annotation_colors = annotation_colors,
+  main = sprintf(
+    "Top differentieel tot expressie komende genen tussen %s en %s",
+    params$tissue_A, params$tissue_B
+  )
+)
+```
+
+
+```{r}
+# Selecteren van genen voor de GO-analyse
+
+# Upregulated genen
+up_genes <- res_df |>
+  filter(padj < 0.01 & log2FoldChange > 1) |>
+  pull(entrez)
+
+# Downregulated genen
+down_genes <- res_df |>
+  filter(padj < 0.01 & log2FoldChange < -1) |>
+  pull(entrez)
+
+# Alle genen in de dataset als achtergrond
+gene_universe <- res_df$entrez
+```
+
+
+```{r eval=TRUE, include=FALSE}
+
+# GO analyse object maken voor upregulated genen
+test_object_up <- new(
+  "GOHyperGParams",
+  geneIds = up_genes,          # Entrez IDs van upregulated genen
+  universeGeneIds = gene_universe,  # Achtergrondset
+  annotation = "org.Hs.eg.db", # Humane annotatie
+  ontology = "BP",             # Biological Process
+  pvalueCutoff = 0.01,         # Significantiegrens
+  conditional = FALSE,         # Geen hiërarchische correctie
+  testDirection = "over"       # Overrepresentatie
+)
+```
+
+```{r echo=TRUE}
+# GO-term analyse uitvoeren
+go_up <- hyperGTest(test_object_up)
+
+# Resultaten ophalen
+go_up_results <- summary(go_up)
+
+# Top 20 selecteren
+top20_up <- go_up_results |>
+  head(20)
+```
+
+
+```{r, fig.cap = sprintf("Figuur 6: GO-term enrichment analyse van de twintig meest significant verrijkte biologische processen voor upgereguleerde genen in %s vergeleken met %s. De grafiek toont de GO-termen op de y-as en de −log10 p-waarde op de x-as, waarbij hogere waarden een sterkere statistische verrijking aangeven.", params$tissue_A, params$tissue_B)}
+
+ggplot(top20_up, aes(x = reorder(Term, Pvalue), y = -log10(Pvalue))) +
+  geom_col(fill = "orange") +
+  coord_flip() +
+  labs(
+    title = sprintf(
+      "Top 20 verrijkte GO-termen voor upgereguleerde genen (%s vs %s)",
+      params$tissue_A, params$tissue_B
+    ),
+    x = "GO-term",
+    y = "-log10 p-waarde"
+  ) +
+  theme_minimal()
+```
+
+
+```{r eval=TRUE, include=FALSE}
+
+# GO analyse object maken voor downregulated genen
+test_object_down <- new(
+  "GOHyperGParams",
+  geneIds = down_genes,          # Entrez IDs van downregulated genen
+  universeGeneIds = gene_universe,  # Achtergrondset
+  annotation = "org.Hs.eg.db",   # Humane GO-annotatie
+  ontology = "BP",               # Biological Process
+  pvalueCutoff = 0.01,           # Significantiegrens
+  conditional = FALSE,           # Geen hiërarchische correctie
+  testDirection = "over"         # Overrepresentatie
+)
+```
+
+
+```{r}
+
+# GO-term analyse uitvoeren
+go_down <- hyperGTest(test_object_down)
+
+# Resultaten ophalen
+go_down_results <- summary(go_down)
+
+# Top 20 GO-termen selecteren (veilig, ook als er <20 termen zijn)
+top20_down <- go_down_results |>
+  head(20)
+```
+
+
+```{r echo=TRUE, fig.cap = sprintf("Figuur 7: GO-term enrichment analyse van de twintig meest significant verrijkte biologische processen voor downgereguleerde genen in %s vergeleken met %s. De grafiek toont de GO-termen op de y-as en de −log10 p-waarde op de x-as, waarbij hogere waarden een sterkere statistische verrijking aangeven.", params$tissue_A, params$tissue_B)}
+
+ggplot(top20_down, aes(x = reorder(Term, Pvalue), y = -log10(Pvalue))) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  labs(
+    title = sprintf(
+      "Top 20 verrijkte GO-termen voor downgereguleerde genen (%s vs %s)",
+      params$tissue_A, params$tissue_B
+    ),
+    x = "GO-term",
+    y = "-log10 p-waarde"
+  ) +
+  theme_minimal()
+```
+
