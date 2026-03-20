@@ -130,7 +130,7 @@ make_bam_names <- function(tissue) {
 bam_A <- make_bam_names(params$tissue_A)
 bam_B <- make_bam_names(params$tissue_B)
 
-bam_files <- file.path("aligned_bam", c(bam_A, bam_B))
+bam_files <- file.path(tempdir(), c(bam_A, bam_B))
 
 # featureCounts uitvoeren
 
