@@ -66,7 +66,7 @@ alignment_statistics <- align(
 )
 ```
  
-
+<br>
 
 ```{r fig.cap = sprintf("Figuur 1: Percentage uniek aligned reads per BAM-bestand voor %s- en %s-samples na alignment van RNA-seq reads tegen het humane referentiegenoom hg38.", params$tissue_A, params$tissue_B), message=FALSE, warning=FALSE}
 
@@ -118,6 +118,7 @@ bam_staafdiagram <- ggplot(alignment_df, aes(x = BAM, y = PercentUnique, fill = 
 bam_staafdiagram
 ```
 
+<br>
 
 ```{r, results='hide', message=FALSE, warning=FALSE}
 
@@ -146,6 +147,7 @@ read_counts <- featureCounts(
 )
 ```
 
+<br>
 
 ```{r}
 # Countmatrix uit featureCounts-resultaat halen
@@ -172,6 +174,7 @@ dds <- DESeqDataSetFromMatrix(
 )
 ```
 
+<br>
 
 ```{r fig.cap = sprintf( "Figuur 2: Principal component analyse van samples van %s en %s op basis van variance‑gestabiliseerde genexpressiewaarden. De assen tonen de eerste twee principal components en het percentage verklaarde variantie.", params$tissue_A, params$tissue_B), message=FALSE, warning=FALSE}
 
@@ -218,7 +221,7 @@ ggplot(pca_plotting, aes(x = PC1, y = PC2)) +
   )
 ```
 
-
+<br>
 
 ```{r fig.cap = sprintf( "Figuur 3: Correlatieheatmap van variance‑gestabiliseerde genexpressiewaarden van samples van %s en %s. De kleurenschaal geeft de correlatiecoëfficiënt tussen samples weer. De gekleurde balk boven de heatmap geeft het weefseltype aan, terwijl de dendrogrammen de hiërarchische clustering van de samples tonen op basis van hun genexpressieprofielen.", params$tissue_A, params$tissue_B), message=FALSE, warning=FALSE}
 
@@ -237,6 +240,9 @@ annotation_col <- data.frame(
 )
 rownames(annotation_col) <- colnames(vsd_matrix)
 
+# Zelfde annotatie voor rijen
+annotation_row <- annotation_col
+
 # Dynamische kleuren voor weefsels
 annotation_colors <- list(
   Weefsel = setNames(
@@ -249,6 +255,7 @@ annotation_colors <- list(
 pheatmap(
   cor_matrix,
   annotation_col = annotation_col,
+  annotation_row = annotation_row,
   annotation_colors = annotation_colors,
   main = sprintf("Correlatie tussen %s- en %s-samples", params$tissue_A, params$tissue_B),
   fontsize_row = 10,
@@ -257,6 +264,7 @@ pheatmap(
 )
 ```
 
+<br>
 
 ```{r, eval=TRUE}
 
@@ -276,6 +284,7 @@ res_df <- as.data.frame(res)
 res_df$entrez <- rownames(res_df)
 ```
 
+<br>
 
 ```{r}
 
@@ -293,6 +302,8 @@ res_df$significant[
 ] <- "significant"
 ```
 
+<br>
+
 ```{r}
 
 # Aantal up- en downregulated genen tellen
@@ -309,8 +320,9 @@ downregulated <- sum(
 )
 ```
 
+<br>
 
-```{r, fig.cap = sprintf( "Figuur 4: Volcano plot van differentiële genexpressie tussen %s- en %s-weefsel. De genen worden weergegeven als punten waarbij de log2 fold change op de x‑as staat en de negatieve log10 van de adjusted p‑waarde op de y‑as. Significante genen zijn weergegeven in oranje en niet‑significante genen in grijs. De verticale stippellijnen geven de ingestelde log2 fold change thresholds (%s en %s) weer en de horizontale stippellijn geeft de threshold voor de adjusted p‑waarde weer.", params$tissue_A, params$tissue_B, -lfc_threshold,lfc_threshold)}
+```{r, fig.cap = sprintf( "Figuur 4: Volcano plot van differentiële genexpressie tussen %s- en %s-weefsel. De genen worden weergegeven als punten waarbij de log2 fold change op de x‑as staat en de negatieve log10 van de adjusted p‑waarde op de y‑as. Significante genen zijn weergegeven in oranje en niet‑significante genen in grijs. De verticale stippellijnen geven de ingestelde log2 fold change thresholds (%s en %s) weer en de horizontale stippellijn geeft de threshold voor de adjusted p‑waarde weer. Genen links van de negatieve drempel (−1) zijn downregulated, terwijl genen rechts van de positieve drempel (1) upregulated zijn.", params$tissue_A, params$tissue_B, -lfc_threshold,lfc_threshold)}
 
 ggplot(res_df, aes(x = log2FoldChange, y = -log10(padj))) +
   
@@ -370,7 +382,7 @@ ggplot(res_df, aes(x = log2FoldChange, y = -log10(padj))) +
   theme_minimal()
 ```
 
-
+<br>
 
 ```{r}
 
@@ -394,6 +406,7 @@ top_down <- sig_genes |>
 top_genes <- rbind(top_up, top_down)
 ```
 
+<br>
 
 ```{r}
 
@@ -405,6 +418,8 @@ available_genes <- intersect(top_genes$entrez, rownames(normalized_counts))
 
 heatmap_matrix <- normalized_counts[available_genes, ]
 ```
+
+<br>
 
 ```{r}
 # Entrez ID omzetten naar gensymbool
@@ -423,6 +438,7 @@ gene_symbols[is.na(gene_symbols)] <- rownames(heatmap_matrix)[is.na(gene_symbols
 rownames(heatmap_matrix) <- gene_symbols
 ```
 
+<br>
 
 ```{r, fig.cap = sprintf("Figuur 5: Heatmap van de genormaliseerde expressiewaarden van de meest significant differentieel tot expressie komende genen tussen %s- en %s-weefsel. De rijen tonen de geselecteerde genen en de kolommen tonen de individuele samples van %s- en %s-weefsel. De kleuren geven de geschaalde genexpressie weer, waarbij rood een relatief hogere expressie aangeeft en blauw een lagere expressie. De balk boven de heatmap geeft het weefseltype van de samples weer.", params$tissue_A, params$tissue_B, params$tissue_A, params$tissue_B)}
 
@@ -438,6 +454,7 @@ pheatmap(
 )
 ```
 
+<br>
 
 ```{r}
 # Selecteren van genen voor de GO-analyse
@@ -456,6 +473,7 @@ down_genes <- res_df |>
 gene_universe <- res_df$entrez
 ```
 
+<br>
 
 ```{r eval=TRUE, include=FALSE}
 
@@ -472,6 +490,8 @@ test_object_up <- new(
 )
 ```
 
+<br>
+
 ```{r echo=TRUE}
 # GO-term analyse uitvoeren
 go_up <- hyperGTest(test_object_up)
@@ -484,6 +504,7 @@ top20_up <- go_up_results |>
   head(20)
 ```
 
+<br>
 
 ```{r, fig.cap = sprintf("Figuur 6: GO-term enrichment analyse van de twintig meest significant verrijkte biologische processen voor upgereguleerde genen in %s vergeleken met %s. De grafiek toont de GO-termen op de y-as en de −log10 p-waarde op de x-as, waarbij hogere waarden een sterkere statistische verrijking aangeven.", params$tissue_A, params$tissue_B)}
 
@@ -502,6 +523,7 @@ upgereguleerde genen (%s vs %s)",
   theme_minimal()
 ```
 
+<br>
 
 ```{r eval=TRUE, include=FALSE}
 
@@ -518,6 +540,7 @@ test_object_down <- new(
 )
 ```
 
+<br>
 
 ```{r}
 
@@ -532,6 +555,7 @@ top20_down <- go_down_results |>
   head(20)
 ```
 
+<br>
 
 ```{r echo=TRUE, fig.cap = sprintf("Figuur 7: GO-term enrichment analyse van de twintig meest significant verrijkte biologische processen voor downgereguleerde genen in %s vergeleken met %s. De grafiek toont de GO-termen op de y-as en de −log10 p-waarde op de x-as, waarbij hogere waarden een sterkere statistische verrijking aangeven.", params$tissue_A, params$tissue_B)}
 
