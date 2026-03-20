@@ -399,8 +399,6 @@ downregulated <- sum(
 )
 ```
 
-<br>
-
 ```{r figuur 4, echo=TRUE, fig.cap="Figuur 4: Volcano plot van differentiële genexpressie tussen hersen- en leverweefsel. De genen worden weergegeven als punten waarbij de log2 fold change op de x‑as staat en de negatieve log10 van de adjusted p‑waarde op de y‑as. Significante genen zijn weergegeven in oranje en niet‑significante genen in grijs. De verticale stippellijnen geven de ingestelde log2 fold change thresholds (−1 en 1) weer en de horizontale stippellijn geeft de threshold voor de adjusted p‑waarde weer. Genen links van de negatieve drempel (−1) zijn downregulated, terwijl genen rechts van de positieve drempel (1) upregulated zijn."}
 
 ggplot(res_df, aes(x = log2FoldChange, y = -log10(padj))) +

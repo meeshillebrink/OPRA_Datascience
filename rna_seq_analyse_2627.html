@@ -891,7 +891,6 @@ downregulated &lt;- sum(
   res_df$log2FoldChange &lt; -lfc_threshold,
   na.rm = TRUE
 )</code></pre>
-<p><br></p>
 <pre class="r"><code>ggplot(res_df, aes(x = log2FoldChange, y = -log10(padj))) +
   
   # Punten (allemaal bolletjes)

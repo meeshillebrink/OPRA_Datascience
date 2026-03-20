@@ -29,25 +29,9 @@ library(AnnotationDbi)
 library(org.Hs.eg.db)
 ```
 
-# Introductie van de analyse van genexpressieverschillen tussen hersen- en leverweefsel
-
-In dit project wordt onderzocht welke verschillen in genexpressie bestaan tussen hersenweefsel en leverweefsel, en welke biologische processen hiermee samenhangen. Inzicht in weefselspecifieke genexpressie is essentieel voor het begrijpen van functionele specialisatie binnen het lichaam en de onderliggende biologische mechanismen.
-
-Om deze onderzoeksvraag te beantwoorden wordt RNA-seq data geanalyseerd. De reads worden uitgelijnd tegen een referentiegenoom en samengevat in een counttabel, waarna een differentiële genexpressieanalyse wordt uitgevoerd. Deze analyse maakt het mogelijk om genen te identificeren die significant verschillend tot expressie komen tussen beide weefsels.
-
-Vervolgens wordt een Gene Ontology (GO)-term enrichment analyse toegepast om de biologische functies en processen te karakteriseren die samenhangen met de gevonden expressieverschillen. Op deze manier wordt niet alleen vastgesteld welke genen verschillen, maar ook welke functionele implicaties deze verschillen hebben.
-
 <br>
 
 # Alignment van RNA-seq reads tegen het humane referentiegenoom hg38
-
-Voor de alignment zijn de FASTQ-bestanden van lever- en hersenweefsel aligned tegen het humane referentiegenoom hg38 met de functie align() uit het Rsubread pakket. Hiervoor is een vooraf gegenereerde hg38-index gebruikt. De zes FASTQ-bestanden (drie lever en drie brein) zijn meegegeven via readfile1, zodat elke sample afzonderlijk wordt aligned.
-
-Omdat het om RNA-seq data gaat, is type = 0 ingesteld zodat het juiste alignmentprotocol voor RNA wordt toegepast. De inputbestanden zijn gzipped FASTQ-bestanden (input_format = "gzFASTQ") en de resultaten worden opgeslagen als BAM-bestanden (output_format = "BAM").
-
-Met unique = TRUE zijn alleen reads meegenomen die op één duidelijke positie in het genoom alignen. Reads die op meerdere locaties kunnen alignen worden uitgesloten. Dit vermindert ambiguïteit bij het toewijzen van reads aan genen en zorgt ervoor dat de genkwantificatie eenduidiger wordt.
-
-De alignmentstatistieken zijn opgeslagen in het object alignment_statistics voor verdere analyse.
 
 ```{r alignment, results='hide', message=FALSE, warning=FALSE}
 
@@ -138,29 +122,6 @@ bam_staafdiagram <- ggplot(alignment_df, aes(x = BAM, y = PercentUnique, fill = 
 # Plot tonen
 bam_staafdiagram
 ```
-In figuur 1 is het percentage uniek aligned reads weergegeven voor drie hersensamples en drie leversamples. De hersensamples zijn weergegeven in groen en de leversamples in geel. De leversamples vertonen percentages tussen ongeveer 49% en 78%, terwijl de hersensamples waarden tonen tussen ongeveer 28% en 66%. Dit laat zien dat het percentage uniek aligned reads varieert tussen de verschillende samples.
-
-Binnen beide weefseltypes is daarnaast variatie tussen replicaten zichtbaar. Vooral het tweede hersensample laat een duidelijk lager percentage uniek aligned reads zien dan de overige samples. Een lager percentage uniek aligned reads kan ontstaan doordat een groter deel van de reads op meerdere locaties in het genoom kan alignen of doordat reads onvoldoende overeenkomen met het referentiegenoom. Dit kan bijvoorbeeld veroorzaakt worden door technische variatie tijdens sequencing of door verschillen in de complexiteit van het transcriptome.
-
-Hoewel er variatie tussen samples aanwezig is, vertonen de meeste samples een relatief hoog percentage uniek aligned reads. Dit wijst erop dat het merendeel van de reads aan één locatie in het genoom kan worden toegewezen.
-
-<br>
-
-## Conclusie van alignmentstatistieken van hersen- en levermonsters
-
-Uit de alignmentstatistieken blijkt dat het percentage uniek aligned reads varieert tussen de verschillende samples. Zowel binnen de lever- als de hersenmonsters is spreiding zichtbaar, waarbij enkele samples een lager percentage uniek aligned reads vertonen dan andere. Er is echter geen duidelijk patroon waarbij één van de twee weefsels consequent hogere of lagere percentages laat zien.
-
-<br>
-
-# Kwantificatie van genexpressie en inspectie van RNA-seq data
-
-Voor het genereren van de count table zijn de zes BAM-bestanden van lever- en breinsamples geanalyseerd met de functie featureCounts() uit het Rsubread pakket, waarbij gebruik is gemaakt van de ingebouwde hg38 RefSeq annotatie. Er is gekozen voor useMetaFeatures = TRUE zodat reads op genniveau worden samengevoegd, wat aansluit bij het doel om genexpressie tussen weefsels te vergelijken. De parameter strandSpecific = 0 is ingesteld omdat de libraries niet strand-specifiek zijn voorbereid, waardoor reads van beide DNA-strengen mogen worden meegeteld. Daarnaast is isPairedEnd = FALSE gebruikt omdat de data uit single-end sequencing bestaat.
-
-De verkregen countmatrix is vervolgens omgezet naar een DESeqDataSet, waarbij in de metadata per sample is vastgelegd of deze afkomstig is van lever- of breinweefsel. In het design is ~ weefsel opgenomen, zodat specifiek het verschil tussen deze twee weefsels wordt getest.
-
-Voor de data-inspectie is gekozen voor een variance stabilizing transformatie (vst) in plaats van een eenvoudige log-transformatie. Een log-transformatie corrigeert wel voor grote verschillen in schaal, maar houdt onvoldoende rekening met de mean-variance relatie die kenmerkend is voor RNA-seq data. De vst-methode stabiliseert de variantie over het hele bereik van expressiewaarden en maakt lage en hoge expressieniveaus beter vergelijkbaar. Hierdoor is de data geschikter voor multivariate analyses zoals PCA en correlatieanalyse. Bij het uitvoeren van de vst-transformatie is gekozen voor blind = FALSE, zodat de transformatie rekening houdt met het experimentele design (~ weefsel). Hierdoor blijven de biologische verschillen tussen lever- en brein-samples behouden, wat van belang is voor het correct interpreteren van PCA en heatmaps. Ter vergelijking zou blind = TRUE de transformatie uitvoeren zonder kennis van de groepsindeling, waardoor verschillen tussen condities worden afgevlakt. Omdat het doel van deze analyse juist is om weefselverschillen zichtbaar te maken, is blind = FALSE de juiste keuze.
-
-De PCA is uitgevoerd om te beoordelen of samples van hetzelfde weefsel bij elkaar clusteren en of er een duidelijke scheiding zichtbaar is tussen lever en brein. Daarnaast is een correlatiematrix berekend met de functie cor() op de vst-getransformeerde waarden en gevisualiseerd met pheatmap(). Hiermee kan worden gecontroleerd of replicaten binnen hetzelfde weefsel sterk correleren en of het weefselspecifieke expressiepatronen consistent zijn.
 
 <br>
 
@@ -271,12 +232,7 @@ ggplot(pca_plotting, aes(x = PC1, y = PC2)) +
   )
 ```
 
-Figuur 2 toont de principal component analyse van de variance-gestabiliseerde genexpressiewaarden van lever- en hersensamples. De samples scheiden duidelijk langs de eerste principal component (PC1), die 61% van de totale variantie verklaart. De drie leversamples (geel) clusteren dicht bij elkaar aan de linkerzijde van de grafiek, terwijl de drie hersensamples (groen) zich aan de rechterzijde bevinden. Dit wijst op duidelijke verschillen in weefselspecifieke genexpressiepatronen tussen lever- en hersenweefsel.
-
-Binnen de hersensamples is enige spreiding zichtbaar langs PC2 (21,3% van de variantie), waarbij één sample duidelijk hoger ligt dan de andere twee. Dit suggereert dat er naast de verschillen tussen weefsels ook variatie tussen replicaten aanwezig is. Ondanks deze variatie blijven de samples echter duidelijk gegroepeerd per weefseltype.
-
 <br>
-
 
 ```{r figuur 3, fig.cap = sprintf( "Figuur 3: Correlatieheatmap van variance‑gestabiliseerde genexpressiewaarden van samples van %s en %s. De kleurenschaal geeft de correlatiecoëfficiënt tussen samples weer. De gekleurde balk boven de heatmap geeft het weefseltype aan, terwijl de dendrogrammen de hiërarchische clustering van de samples tonen op basis van hun genexpressieprofielen.", params$tissue_A, params$tissue_B), message=FALSE, warning=FALSE}
 
@@ -320,41 +276,7 @@ pheatmap(
 )
 ```
 
-De grafiek in figuur 3 toont de correlatie tussen de genexpressieprofielen van alle samples op basis van de variance-gestabiliseerde RNA-seq data. De kleur van elk vakje geeft de sterkte van de correlatie tussen twee samples weer, waarbij hogere correlaties worden weergegeven in warmere kleuren (rood) en lagere correlaties in koelere kleuren (blauw). De schaal naast de heatmap toont de bijbehorende correlatiecoëfficiënten.
-
-De drie leversamples vertonen onderling een hoge correlatie en clusteren samen in het dendrogram. Dit is ook zichtbaar in de annotatiebalk boven de heatmap, waar deze samples in geel zijn aangeduid. De drie hersensamples vertonen eveneens een sterke onderlinge correlatie en vormen een aparte cluster, aangeduid in groen. Dit patroon laat zien dat samples met hetzelfde weefseltype vergelijkbare genexpressieprofielen hebben.
-
-Hoewel de correlatie tussen lever- en hersensamples lager is dan binnen dezelfde weefsels, is deze niet nul. Dit betekent dat er naast weefselspecifieke genexpressie ook genen zijn die in beide weefsels vergelijkbaar tot expressie komen. Dit laat zien dat er naast weefselspecifieke genexpressie ook gedeelde expressiepatronen tussen de twee weefsels bestaan.
-
 <br>
-
-## Conclusie van principal component analyse en correlatieheatmap
-
-Beide figuren laten zien dat de samples clusteren op basis van weefseltype. Replicaten binnen hetzelfde weefsel vertonen een sterke overeenkomst in genexpressie en groeperen samen in zowel de principal component analyse als de correlatieheatmap. Tegelijkertijd zijn lever- en hersensamples duidelijk van elkaar gescheiden, wat wijst op weefselspecifieke verschillen in genexpressie. Ondanks deze scheiding is er ook een zekere mate van overeenkomst tussen de genexpressieprofielen van beide weefsels zichtbaar, aangezien de correlaties tussen lever- en hersensamples nog steeds positief zijn.
-
-<br>
-
-## Identificatie van genen met differentiële expressie tussen lever- en hersenweefsel
-
-Voor het identificeren van genen die verschillend tot expressie komen tussen lever- en hersenweefsel is een differentiële genexpressieanalyse uitgevoerd met de functie DESeq() uit het pakket DESeq2. Als input voor deze analyse is het eerder aangemaakte DESeqDataSet object (dds) gebruikt, waarin de ruwe countdata en de sample-informatie zijn opgeslagen.
-
-Tijdens het uitvoeren van DESeq() worden eerst size factors geschat om verschillen in sequencingdiepte tussen samples te normaliseren. Vervolgens wordt voor elk gen de dispersie geschat en wordt een negatief binomiaal model toegepast op de countdata. Op basis van dit model wordt getest of genen significant verschillend tot expressie komen tussen lever- en hersenweefsel.
-
-De resultaten van deze analyse zijn opgehaald met de functie results(). Voor elk gen worden onder andere de log2 fold change, de p-waarde en de adjusted p-waarde berekend. De adjusted p-waarde corrigeert voor multiple testing, omdat duizenden genen tegelijkertijd statistisch worden getest.
-
-De resultaten zijn vervolgens omgezet naar een dataframe (res_df) om verdere analyse en visualisatie te vereenvoudigen. Daarnaast zijn de Entrez identifiers als aparte kolom toegevoegd. Entrez identifiers zijn unieke numerieke identificatiecodes voor genen in de database van National Center for Biotechnology Information.
-
-Om te bepalen welke genen significant verschillend tot expressie komen zijn thresholds ingesteld voor zowel de log2 fold change als de adjusted p-waarde. In deze analyse is een adjusted p-waarde kleiner dan 0,05 gebruikt als maat voor statistische significantie. Daarnaast is een absolute log2 fold change groter dan 1 gebruikt om genen te selecteren met een duidelijke verandering in expressieniveau tussen de twee weefsels.
-
-Op basis van deze thresholds is per gen bepaald of het significant verschillend tot expressie komt tussen lever- en hersenweefsel. Daarnaast is het aantal genen bepaald dat significant upgereguleerd is (hogere expressie) en het aantal genen dat significant downgereguleerd is (lagere expressie).
-
-De resultaten van de differentiële genexpressieanalyse zijn gevisualiseerd met een volcano plot. In deze grafiek wordt voor elk gen de log2 fold change uitgezet tegen de negatieve log10 van de adjusted p-waarde. Hierdoor worden zowel de grootte van het expressieverschil als de statistische significantie zichtbaar. Genen die voldoen aan de ingestelde thresholds worden weergegeven in oranje, terwijl overige genen grijs worden weergegeven. De thresholds voor de log2 fold change en de adjusted p-waarde zijn in de grafiek weergegeven als stippellijnen.
-
-Voor de heatmap zijn eerst alle significante genen geselecteerd met een adjusted p-waarde kleiner dan 0,05. Vervolgens zijn de vijf upgereguleerde genen met de kleinste adjusted p-waarde en de vijf downgereguleerde genen met de kleinste adjusted p-waarde geselecteerd. Voor deze genen zijn de genormaliseerde countwaarden opgehaald met de functie counts() uit het pakket DESeq2, waarbij normalized = TRUE is ingesteld zodat verschillen in sequencingdiepte tussen samples worden gecorrigeerd.
-
-De genen in de dataset zijn oorspronkelijk aangeduid met Entrez identifiers. Voor een betere interpretatie van de heatmap zijn deze identifiers omgezet naar gensymbolen met de functie mapIds() uit het pakket AnnotationDbi, gebruikmakend van de humane annotatiedatabase org.Hs.eg.db.
-
-De heatmap is vervolgens gegenereerd met de functie pheatmap() uit het pakket pheatmap. In deze heatmap worden de genormaliseerde expressiewaarden van de geselecteerde genen weergegeven voor alle samples, waarbij de waarden per gen worden geschaald zodat verschillen in expressiepatronen tussen lever- en hersenweefsel duidelijk zichtbaar worden.
 
 ```{r dge analyse, eval=TRUE}
 
@@ -472,12 +394,6 @@ ggplot(res_df, aes(x = log2FoldChange, y = -log10(padj))) +
   theme_minimal()
 ```
 
-De grafiek in figuur 4 toont een volcano plot met de resultaten van de differentiële genexpressieanalyse tussen hersen- en leverweefsel. Elk punt in de grafiek vertegenwoordigt één gen. De x-as geeft de log2 fold change weer, wat het verschil in expressieniveau tussen de twee weefsels weergeeft. Positieve waarden duiden op een hogere expressie in één weefsel, terwijl negatieve waarden wijzen op een hogere expressie in het andere weefsel. De y-as toont de negatieve log10 van de adjusted p-waarde, waardoor genen met een lagere p-waarde hoger in de grafiek verschijnen en dus statistisch significanter zijn.
-
-Genen die voldoen aan de ingestelde thresholds voor zowel de adjusted p-waarde (padj < 0,05) als de log2 fold change (|log2FC| > 1) zijn weergegeven in oranje. Genen die niet aan deze criteria voldoen worden in grijs weergegeven. De verticale stippellijnen markeren de grenswaarden voor de log2 fold change, terwijl de horizontale stippellijn de grens voor de adjusted p-waarde aangeeft.
-
-De tekst in het midden van de grafiek geeft het aantal genen weer dat significant upgereguleerd of downgereguleerd is. In deze analyse zijn 1456 genen significant upgereguleerd en 2066 genen significant downgereguleerd volgens de ingestelde thresholds.
-
 <br>
 
 ```{r sig genen}
@@ -551,29 +467,7 @@ pheatmap(
 )
 ```
 
-De heatmap in figuut 5 toont de genormaliseerde expressiewaarden van de tien genen met de sterkste differentiële expressie tussen lever- en hersenweefsel. Hiervoor zijn de vijf upgereguleerde genen met de kleinste adjusted p-waarde en de vijf downgereguleerde genen met de kleinste adjusted p-waarde geselecteerd uit de differentiële genexpressieanalyse. De expressiewaarden zijn per gen geschaald zodat verschillen in expressiepatronen tussen de samples duidelijk zichtbaar worden. In de heatmap vertegenwoordigt elke rij een gen en elke kolom een sample. De kleurenschaal geeft de relatieve expressie weer, waarbij rood een hogere expressie en blauw een lagere expressie van een gen aangeeft.
-
-De bovenste cluster van genen (FGB, FGG, APOA2, HRG en APOC3) vertoont een hogere expressie in de leversamples en een lagere expressie in de hersensamples. Deze genen coderen voor eiwitten die voornamelijk betrokken zijn bij processen die typisch zijn voor leverfunctie. FGB en FGG coderen voor subeenheden van fibrinogeen, een eiwit dat een belangrijke rol speelt in de bloedstolling en voornamelijk in de lever wordt geproduceerd. APOA2 en APOC3 behoren tot de apolipoproteïnen en zijn betrokken bij het transport en metabolisme van lipiden in het bloed. HRG (histidine-rich glycoprotein) speelt een rol in bloedstolling, immuunrespons en angiogenese. De hogere expressie van deze genen in leverweefsel komt overeen met de bekende rol van de lever in de productie van plasma-eiwitten en lipoproteïnen.
-
-De onderste cluster van genen (KIF1A, APLP1, PCLO, CPLX2 en MAP1A) vertoont juist een hogere expressie in de hersensamples en een lagere expressie in de leversamples. Deze genen coderen voor eiwitten die betrokken zijn bij neuronale functies. KIF1A codeert voor een kinesine-motorproteïne dat betrokken is bij het transport van synaptische vesikels langs microtubuli in neuronen. APLP1 behoort tot de amyloid precursor protein-familie en speelt een rol in neuronale communicatie en synaptische functie. PCLO (Piccolo) is een eiwit dat betrokken is bij de organisatie van presynaptische structuren in zenuwcellen. CPLX2 (Complexin 2) reguleert neurotransmitterafgifte bij synapsen. MAP1A (Microtubule-associated protein 1A) stabiliseert microtubuli en speelt een rol in de structuur en functie van neuronen.
-
-De clustering van zowel de genen als de samples laat zien dat de expressiepatronen duidelijk verschillen tussen lever- en hersenweefsel. De leversamples clusteren samen en vertonen vergelijkbare expressie van levergerelateerde genen, terwijl de hersensamples samen clusteren en een hogere expressie vertonen van genen die betrokken zijn bij neuronale processen. Dit komt overeen met de biologische verwachting dat verschillende weefsels gespecialiseerde genexpressiepatronen hebben die passen bij hun functie.
-
 <br>
-
-# Conclusie van volcano plot en heatmap
-
-De volcano plot laat zien dat er veel genen significant differentieel tot expressie komen tussen hersen- en leverweefsel. Met de ingestelde drempelwaarden voor log2 fold change en adjusted p-waarde werden 1456 genen als upgereguleerd en 2066 genen als downgereguleerd geïdentificeerd. Dit wijst op duidelijke verschillen in genexpressie tussen beide weefsels.
-
-Tegelijkertijd is in de volcano plot ook zichtbaar dat een deel van de genen geen significante verandering in expressie vertoont. Deze genen liggen rond een log2 fold change van nul en boven de p-waardedrempel, wat aangeeft dat bepaalde genen in beide weefsels vergelijkbare expressieniveaus hebben. Dit laat zien dat naast verschillen ook overeenkomsten bestaan in de genexpressie tussen lever- en hersenweefsel.
-
-De heatmap ondersteunt deze bevindingen en laat zien dat de geselecteerde topgenen duidelijke weefselspecifieke expressiepatronen vertonen. Genen zoals FGB, FGG, APOA2, HRG en APOC3 hebben een hogere expressie in leverweefsel en zijn betrokken bij processen zoals bloedstolling en lipidenmetabolisme, functies die typisch zijn voor de lever. Daarentegen vertonen genen zoals KIF1A, APLP1, PCLO, CPLX2 en MAP1A een hogere expressie in hersenweefsel en spelen zij een rol in neuronale processen zoals synaptische transmissie en intracellulair transport in neuronen.
-
-Daarnaast laat de clustering in de heatmap zien dat replicaten van hetzelfde weefsel sterk op elkaar lijken en samen clusteren. Dit wijst op consistente metingen en laat zien dat de verschillen in genexpressie voornamelijk worden bepaald door het weefseltype. Hoewel de expressie van bepaalde genen duidelijk verschilt tussen lever en hersenen, vertonen replicaten binnen hetzelfde weefsel juist sterke overeenkomst.
-
-Samen laten de volcano plot en de heatmap zien dat lever- en hersenweefsel zowel duidelijke verschillen als bepaalde overeenkomsten in genexpressie vertonen. De waargenomen verschillen komen overeen met de gespecialiseerde functies van beide weefsels, terwijl de overeenkomsten erop wijzen dat sommige genen in beide weefsels vergelijkbare basale expressieniveaus hebben.
-
-<br> 
 
 ## Gene Ontology analyse van differentieel tot expressie komende genen
 
@@ -644,12 +538,6 @@ upgereguleerde genen (%s vs %s)",
   theme_minimal()
 ```
 
-De grafiek in figuur 6 toont de twintig meest significant verrijkte Gene Ontology (GO) biologische processen voor genen die hoger tot expressie komen in leverweefsel ten opzichte van hersenweefsel. Voor deze analyse zijn genen geselecteerd met een adjusted p-waarde < 0,01 en een log2 fold change > 1. De verrijking van GO-termen is berekend met een GO-term enrichment analyse waarbij de geselecteerde genen worden vergeleken met alle genen in de dataset als achtergrond. In de grafiek staat op de x-as de −log10 van de p-waarde weergegeven, waarbij hogere waarden duiden op een sterkere statistische significantie van de verrijking.
-
-De verrijkte GO-termen hebben voornamelijk betrekking op metabole processen, zoals small molecule metabolic process, organic acid metabolic process, oxoacid metabolic process en lipid metabolic process. Daarnaast zijn ook processen verrijkt die betrokken zijn bij de biosynthese en afbraak van kleine moleculen en organische zuren, zoals carboxylic acid metabolic process, small molecule catabolic process en fatty acid metabolic process. Ook termen zoals xenobiotic metabolic process en response to xenobiotic stimulus komen naar voren, die verband houden met de verwerking en detoxificatie van lichaamsvreemde stoffen.
-
-Deze verrijking van metabole en detoxificatieprocessen komt overeen met de biologische functie van de lever. De lever speelt een centrale rol in het metabolisme van vetten, koolhydraten en andere kleine moleculen, evenals in de afbraak en verwerking van toxische stoffen. De hogere expressie van genen die betrokken zijn bij deze processen in leverweefsel komt daarom overeen met de verwachting dat levercellen gespecialiseerd zijn in stofwisselings- en detoxificatiefuncties.
-
 <br>
 
 ```{r GO-analyse down genen, eval=TRUE, include=FALSE}
@@ -700,64 +588,3 @@ downgereguleerde genen (%s vs %s)",
   ) +
   theme_minimal()
 ```
-
-De grafiek in figuur 7 toont de twintig meest significant verrijkte Gene Ontology (GO) biologische processen voor genen die lager tot expressie komen in leverweefsel en dus relatief hoger tot expressie komen in hersenweefsel. Voor deze analyse zijn genen geselecteerd met een adjusted p-waarde < 0,01 en een log2 fold change < −1. De GO-term enrichment analyse vergelijkt deze genen met alle genen in de dataset als achtergrond om te bepalen welke biologische processen statistisch oververtegenwoordigd zijn.
-
-De verrijkte GO-termen zijn voornamelijk gerelateerd aan neuronale ontwikkeling en synaptische communicatie. Voorbeelden hiervan zijn synaptic signaling, chemical synaptic transmission, trans-synaptic signaling en anterograde trans-synaptic signaling, die betrokken zijn bij de overdracht van signalen tussen zenuwcellen. Daarnaast komen ook processen naar voren die te maken hebben met de ontwikkeling en organisatie van neuronen, zoals neuron development, neurogenesis, neuron differentiation en synapse organization. Andere termen, zoals cell-cell signaling en regulation of trans-synaptic signaling, wijzen eveneens op communicatie tussen neuronen en de regulatie van synaptische activiteit.
-
-Deze verrijking van neuronale en synaptische processen komt overeen met de biologische functie van hersenweefsel. Hersencellen zijn gespecialiseerd in het verwerken en doorgeven van signalen via synapsen en spelen een belangrijke rol in communicatie binnen het zenuwstelsel. De hogere expressie van genen die betrokken zijn bij neuronale ontwikkeling en synaptische signaaloverdracht in hersenweefsel komt daarom overeen met de verwachting dat deze processen specifiek actief zijn in het brein.
-
-<br> 
-
-# Conclusie van de GO-term analyse
-
-De GO-term enrichment analyse laat zien dat de differentieel tot expressie komende genen sterk samenhangen met de biologische functies van de onderzochte weefsels. De upgereguleerde genen in leverweefsel zijn voornamelijk verrijkt voor metabole processen, zoals het metabolisme van kleine moleculen, organische zuren en lipiden, evenals processen die betrokken zijn bij de verwerking van xenobiotische stoffen. Dit komt overeen met de bekende rol van de lever als centraal orgaan voor stofwisseling, detoxificatie en de verwerking van verschillende metabolieten.
-
-De genen die relatief hoger tot expressie komen in hersenweefsel zijn daarentegen verrijkt voor processen die gerelateerd zijn aan neuronale ontwikkeling en synaptische communicatie. Voorbeelden hiervan zijn synaptische signaaloverdracht, neuronontwikkeling en neurogenese. Deze processen zijn kenmerkend voor zenuwweefsel en spelen een belangrijke rol in de communicatie tussen neuronen en de organisatie van het zenuwstelsel.
-
-Samen laten de resultaten van de GO-term analyse zien dat de differentiële genexpressie tussen lever- en hersenweefsel functioneel relevante biologische processen weerspiegelt. De verrijkte GO-termen komen overeen met de gespecialiseerde functies van beide weefsels, waarbij leverweefsel voornamelijk betrokken is bij metabole processen en hersenweefsel bij neuronale en synaptische functies.
-
-<br>
-
-# Conclusie van de analyse van genexpressieverschillen tussen hersen- en leverweefsel
-
-In deze studie is onderzocht welke verschillen in genexpressie bestaan tussen hersen- en leverweefsel en welke biologische processen hiermee samenhangen. De resultaten van de RNA-seq analyse tonen overtuigend aan dat er duidelijke en consistente verschillen bestaan in genexpressieprofielen tussen beide weefsels.
-
-De kwaliteitscontrole en alignmentresultaten laten zien dat de data van voldoende kwaliteit is om betrouwbare downstream analyses uit te voeren. Hoewel er variatie bestaat in het percentage uniek gealigneerde reads tussen de samples, blijven deze waarden binnen acceptabele grenzen, wat de betrouwbaarheid van de analyse ondersteunt.
-
-Clusteringanalyses, waaronder de principal component analyse (PCA) en de correlatieheatmap, tonen aan dat samples sterk groeperen op basis van weefseltype. Replicaten binnen hetzelfde weefsel vertonen een hoge mate van overeenkomst, terwijl lever- en hersensamples duidelijk van elkaar gescheiden zijn. Dit bevestigt dat het weefseltype een bepalende factor is voor het genexpressiepatroon.
-
-De differentiële genexpressieanalyse identificeert een groot aantal significant verschillend tot expressie komende genen. In totaal werden 1456 genen hoger tot expressie gebracht in leverweefsel en 2066 genen hoger tot expressie in hersenweefsel, wat wijst op uitgesproken weefselspecifieke expressie. Tegelijkertijd vertoont een deel van de genen vergelijkbare expressieniveaus in beide weefsels, wat duidt op gedeelde basale cellulaire functies.
-
-De volcano plot en heatmap ondersteunen deze bevindingen en laten zien dat de differentieel tot expressie komende genen duidelijke en consistente weefselspecifieke patronen vertonen. Genen met verhoogde expressie in leverweefsel zijn voornamelijk betrokken bij metabole processen, terwijl genen met hogere expressie in hersenweefsel gerelateerd zijn aan neuronale functies, zoals synaptische transmissie en neuronale ontwikkeling.
-
-De Gene Ontology-analyse bevestigt dat deze expressieverschillen functioneel relevant zijn en aansluiten bij de bekende biologische rollen van beide weefsels. Leverweefsel wordt gekenmerkt door metabole en detoxificatieprocessen, terwijl hersenweefsel wordt gekenmerkt door neuronale en synaptische activiteiten.
-
-Hoewel de resultaten robuust en consistent zijn, zou verdere validatie met aanvullende datasets of experimentele technieken de bevindingen kunnen versterken.
-
-Gezamenlijk tonen deze resultaten overtuigend aan dat RNA-seq analyse een krachtig en geschikt hulpmiddel is om weefselspecifieke genexpressie en bijbehorende biologische functies systematisch in kaart te brengen.
-<br>
-
-# Discussie van de analyse van genexpressieverschillen tussen hersen- en leverweefsel
-
-In deze analyse zijn duidelijke verschillen gevonden in genexpressie tussen lever- en hersenweefsel. Dit was zichtbaar in de PCA, de heatmap en de differentiële genexpressieanalyse. Toch zijn er enkele punten die belangrijk zijn om te bespreken bij het interpreteren van de resultaten.
-
-Een belangrijk discussiepunt is de variatie tussen de biologische replicaten. In de PCA is te zien dat de drie hersensamples wel samen clusteren, maar dat één sample verder van de andere twee ligt. Dit kan deels door technische factoren worden veroorzaakt, maar het kan ook een biologische verklaring hebben. Hersenweefsel bestaat namelijk uit verschillende celtypen, zoals neuronen, astrocyten en oligodendrocyten. Als de verhouding van deze celtypen tussen samples verschilt, kan dat invloed hebben op het gemeten genexpressieprofiel. Hierdoor kunnen samples van hetzelfde weefsel toch enige spreiding laten zien.
-
-Daarnaast is het aantal biologische replicaten relatief klein, met drie samples per weefsel. Hoewel dit voldoende is om duidelijke verschillen tussen lever en hersenen te zien, kan een klein aantal replicaten ervoor zorgen dat biologische variatie minder goed wordt weergegeven. Met meer replicaten kan beter worden onderzocht of verschillen tussen samples daadwerkelijk biologisch zijn of dat ze ontstaan door toevallige variatie in een kleine dataset.
-
-Een ander punt is dat de analyse is uitgevoerd op volledig weefsel. Zowel lever als hersenen bestaan uit meerdere verschillende celtypen. De gemeten genexpressie is daarom een gemiddelde van alle cellen in het weefsel. Hierdoor kunnen expressieverschillen die specifiek zijn voor bepaalde celtypen minder duidelijk zichtbaar worden.
-
-In een vervolgonderzoek zou het daarom nuttig zijn om meer biologische replicaten te gebruiken. Door bijvoorbeeld vijf tot tien samples per weefsel te analyseren kan de natuurlijke biologische variatie beter worden weergegeven. Dit maakt de resultaten betrouwbaarder en kan helpen om subtielere verschillen in genexpressie te detecteren.
-
-Daarnaast kan vooraf een uitgebreidere kwaliteitscontrole van de ruwe sequencingdata worden uitgevoerd. Bijvoorbeeld door de kwaliteit van de reads te controleren met een programma zoals FastQC (software die de kwaliteit van sequencingreads analyseert, bijvoorbeeld basekwaliteit, GC-inhoud en aanwezigheid van adapters). Als uit deze analyse blijkt dat er lage kwaliteit stukken of adaptersequenties aanwezig zijn, kunnen deze worden verwijderd met trimmingsoftware zoals Trimmomatic of Cutadapt. Hierdoor kunnen reads beter alignen op het referentiegenoom.
-
-Ook kan het nuttig zijn om extra controleplots van de RNA-seq data te maken voordat de differentiële genexpressieanalyse wordt uitgevoerd. Een voorbeeld hiervan is een MA-plot (een grafiek waarin het gemiddelde expressieniveau van genen wordt vergeleken met het verschil in expressie tussen twee condities). Met zo’n plot kan worden gecontroleerd of de normalisatie goed werkt en of er extreme outliers aanwezig zijn in de data.
-
-Voor vervolgonderzoek zijn daarnaast verschillende aanvullende analyses mogelijk. Zo kan een pathway-analyse worden uitgevoerd, bijvoorbeeld met databases zoals KEGG of Reactome. Hierbij wordt gekeken in welke metabole routes of signaalroutes de differentieel tot expressie komende genen een rol spelen. Dit kan helpen om beter te begrijpen hoe de gevonden genexpressieverschillen bijdragen aan de functies van lever en hersenen.
-
-Ook kan het interessant zijn om meer genen tegelijk te visualiseren in een heatmap, bijvoorbeeld de 50 of 100 meest differentieel tot expressie komende genen. Hierdoor kan beter worden bekeken of er duidelijke clusters van genen bestaan die specifiek zijn voor lever- of hersenweefsel.
-
-Verder kan het interessant zijn om genexpressie op celniveau te onderzoeken met technieken zoals single-cell RNA-sequencing (een methode waarbij genexpressie per individuele cel wordt gemeten in plaats van gemiddeld over een heel weefsel). Hiermee kan worden onderzocht welke genen specifiek actief zijn in bepaalde celtypen binnen lever- of hersenweefsel.
-
-Tot slot kan het waardevol zijn om de resultaten te combineren met andere typen biologische data, zoals eiwitdata of metabolomics. Hiermee kan worden onderzocht of verschillen in genexpressie ook leiden tot veranderingen in eiwitproductie of metabole processen.
