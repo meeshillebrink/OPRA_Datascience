@@ -179,7 +179,6 @@ pca_data <- plotPCA(vsd, intgroup = "weefsel", returnData = TRUE)
 # Percentage variantie per PC
 percentVar <- round(100 * attr(pca_data, "percentVar")
 ```
-```
 
 
 ```{r fig.cap = sprintf("Figuur 2: Principal component analyse van samples van %s en %s op basis van variance-gestabiliseerde genexpressiewaarden. PC1 verklaart %.1f%% van de variantie en PC2 verklaart %.1f%% van de variantie tussen de samples.", params$tissue_A, params$tissue_B, percentVar[1], percentVar[2]), echo=TRUE}
