@@ -102,6 +102,9 @@ percent_unique <- (unique_reads / total_reads) * 100
 # maken van een dataframe voor de staafdiagram van uniquely aligned reads per BAM file
 bam_files <- colnames(alignment_statistics)
 
+# REMOVE .bam from names
+bam_files <- sub("\\.bam$", "", bam_files)
+
 tissue <- ifelse(grepl("liver", bam_files), "Lever", "Brein") # Labelt bestanden als 'Lever' als 'liver' in de bestandsnaam voorkomt, anders 'Brein'
 
 alignment_df <- data.frame(
@@ -396,20 +399,7 @@ downregulated <- sum(
 )
 ```
 
-```{r up en down gen3, echo=TRUE}
-# aantal up- en downregulated genen tellen
-upregulated <- sum(
-  res_df$padj < padj_threshold &
-  res_df$log2FoldChange > lfc_threshold,
-  na.rm = TRUE
-)
-
-downregulated <- sum(
-  res_df$padj < padj_threshold &
-  res_df$log2FoldChange < -lfc_threshold,
-  na.rm = TRUE
-)
-```
+<br>
 
 ```{r figuur 4, echo=TRUE, fig.cap="Figuur 4: Volcano plot van differentiële genexpressie tussen hersen- en leverweefsel. De genen worden weergegeven als punten waarbij de log2 fold change op de x‑as staat en de negatieve log10 van de adjusted p‑waarde op de y‑as. Significante genen zijn weergegeven in oranje en niet‑significante genen in grijs. De verticale stippellijnen geven de ingestelde log2 fold change thresholds (−1 en 1) weer en de horizontale stippellijn geeft de threshold voor de adjusted p‑waarde weer. Genen links van de negatieve drempel (−1) zijn downregulated, terwijl genen rechts van de positieve drempel (1) upregulated zijn."}
 
@@ -710,21 +700,19 @@ Samen laten de resultaten van de GO-term analyse zien dat de differentiële gene
 
 # Conclusie van de analyse van genexpressieverschillen tussen hersen- en leverweefsel
 
-In deze studie is onderzocht welke verschillen in genexpressie bestaan tussen hersen- en leverweefsel en welke biologische processen hiermee samenhangen. De resultaten van de RNA-seq analyse tonen overtuigend aan dat er duidelijke en consistente verschillen bestaan in genexpressieprofielen tussen beide weefsels.
+In ons project is onderzocht welke verschillen in genexpressie bestaan tussen hersen- en leverweefsel en welke biologische processen hiermee samenhangen. De resultaten van de RNA-seq analyse tonen aan dat er duidelijke en consistente verschillen bestaan in genexpressieprofielen tussen beide weefsels.
 
-De kwaliteitscontrole en alignmentresultaten laten zien dat de data van voldoende kwaliteit is om betrouwbare downstream analyses uit te voeren. Hoewel er variatie bestaat in het percentage uniek gealigneerde reads tussen de samples, blijven deze waarden binnen acceptabele grenzen, wat de betrouwbaarheid van de analyse ondersteunt.
+De kwaliteitscontrole en alignmentresultaten laten zien dat de data van voldoende kwaliteit is om betrouwbare downstream analyses uit te voeren. Ondanks enige variatie in het percentage uniek gealigneerde reads tussen de samples, blijven deze waarden binnen acceptabele grenzen.
 
-Clusteringanalyses, waaronder de principal component analyse (PCA) en de correlatieheatmap, tonen aan dat samples sterk groeperen op basis van weefseltype. Replicaten binnen hetzelfde weefsel vertonen een hoge mate van overeenkomst, terwijl lever- en hersensamples duidelijk van elkaar gescheiden zijn. Dit bevestigt dat het weefseltype een bepalende factor is voor het genexpressiepatroon.
+Clusteringanalyses, waaronder de principal component analyse (PCA) en de correlatieheatmap, laten zien dat samples sterk groeperen op basis van weefseltype. Replicaten binnen hetzelfde weefsel vertonen een hoge mate van overeenkomst, terwijl lever- en hersensamples duidelijk van elkaar gescheiden zijn. Dit bevestigt dat het weefseltype een bepalende factor is voor het genexpressiepatroon.
 
-De differentiële genexpressieanalyse identificeert een groot aantal significant verschillend tot expressie komende genen. In totaal werden 1456 genen hoger tot expressie gebracht in leverweefsel en 2066 genen hoger tot expressie in hersenweefsel, wat wijst op uitgesproken weefselspecifieke expressie. Tegelijkertijd vertoont een deel van de genen vergelijkbare expressieniveaus in beide weefsels, wat duidt op gedeelde basale cellulaire functies.
+De differentiële genexpressieanalyse identificeert een groot aantal significant verschillend tot expressie komende genen. In totaal werden 1456 genen hoger tot expressie gebracht in leverweefsel en 2066 genen hoger tot expressie in hersenweefsel, wat wijst op uitgesproken weefselspecifieke expressie. Tegelijkertijd vertonen sommige genen vergelijkbare expressieniveaus in beide weefsels, wat duidt op gedeelde basale cellulaire functies.
 
-De volcano plot en heatmap ondersteunen deze bevindingen en laten zien dat de differentieel tot expressie komende genen duidelijke en consistente weefselspecifieke patronen vertonen. Genen met verhoogde expressie in leverweefsel zijn voornamelijk betrokken bij metabole processen, terwijl genen met hogere expressie in hersenweefsel gerelateerd zijn aan neuronale functies, zoals synaptische transmissie en neuronale ontwikkeling.
+De visualisaties, waaronder de volcano plot en heatmap, ondersteunen deze bevindingen en tonen duidelijke en consistente weefselspecifieke expressiepatronen. Genen met verhoogde expressie in leverweefsel zijn voornamelijk betrokken bij metabole processen, terwijl genen met hogere expressie in hersenweefsel gerelateerd zijn aan neuronale functies, zoals synaptische transmissie en neuronale ontwikkeling.
 
 De Gene Ontology-analyse bevestigt dat deze expressieverschillen functioneel relevant zijn en aansluiten bij de bekende biologische rollen van beide weefsels. Leverweefsel wordt gekenmerkt door metabole en detoxificatieprocessen, terwijl hersenweefsel wordt gekenmerkt door neuronale en synaptische activiteiten.
 
-Hoewel de resultaten robuust en consistent zijn, zou verdere validatie met aanvullende datasets of experimentele technieken de bevindingen kunnen versterken.
-
-Gezamenlijk tonen deze resultaten overtuigend aan dat RNA-seq analyse een krachtig en geschikt hulpmiddel is om weefselspecifieke genexpressie en bijbehorende biologische functies systematisch in kaart te brengen.
+Samengevat tonen deze resultaten aan dat RNA-seq analyse een geschikt en krachtig hulpmiddel is om weefselspecifieke genexpressie en bijbehorende biologische functies systematisch in kaart te brengen.
 <br>
 
 # Discussie van de analyse van genexpressieverschillen tussen hersen- en leverweefsel
