@@ -4,8 +4,14 @@ author: "Chelaysiah Steba"
 date: "`r Sys.Date()`"
 output: html_document
 params:
-  tissue_A: "Hersenen"
-  tissue_B: "Lever"
+  tissue_A:
+    label: "Tissue A"
+    value: "Hersenen"
+    choices: ["Hersenen", "Lever", "Nier"]
+  tissue_B:
+    label: "Tissue B"
+    value: "Lever"
+    choices: ["Hersenen", "Lever", "Nier"]
 ---
 
 
