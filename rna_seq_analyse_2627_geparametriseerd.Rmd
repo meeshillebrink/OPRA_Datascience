@@ -173,7 +173,6 @@ dds <- DESeqDataSetFromMatrix(
 ```
 
 ```{r}
-```{r}
 # PCA data ophalen
 pca_data <- plotPCA(vsd, intgroup = "weefsel", returnData = TRUE)
 
