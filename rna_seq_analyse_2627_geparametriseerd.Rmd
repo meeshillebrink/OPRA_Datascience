@@ -65,10 +65,8 @@ alignment_statistics <- align(
   nthreads = 30
 )
 ```
- 
 
-
-```{r fig.cap = fig_caption, message=FALSE, warning=FALSE}
+```{r caption_setup, include=FALSE}
 
 # Percentage uniquely aligned reads berekenen
 unique_reads <- alignment_statistics["Uniquely_mapped_reads", ]
@@ -84,33 +82,32 @@ fig_caption <- sprintf(
   params$tissue_A, range_A[1], range_A[2],
   params$tissue_B, range_B[1], range_B[2]
 )
+```
 
+```{r fig.cap = fig_caption, message=FALSE, warning=FALSE}
 
 # BAM-bestandsnamen ophalen
 bam_files <- colnames(alignment_statistics)
 
-# Dynamische weefsel-labels bepalen (case-insensitive)
+# Dynamische weefsel-labels bepalen
 tissue_labels <- ifelse(
   grepl(params$tissue_A, bam_files, ignore.case = TRUE),
   params$tissue_A,
   params$tissue_B
 )
 
-# Dataframe maken
 alignment_df <- data.frame(
   BAM = bam_files,
   PercentUnique = as.numeric(percent_unique),
   Tissue = tissue_labels
 )
 
-# Dynamische kleuren
 tissue_colors <- setNames(
   c("#007A4D", "#F0E442"),
   c(params$tissue_A, params$tissue_B)
 )
 
-# Plot maken
-bam_staafdiagram <- ggplot(alignment_df, aes(x = BAM, y = PercentUnique, fill = Tissue)) +
+ggplot(alignment_df, aes(x = BAM, y = PercentUnique, fill = Tissue)) +
   geom_col() +
   scale_fill_manual(values = tissue_colors) +
   labs(
@@ -121,12 +118,7 @@ bam_staafdiagram <- ggplot(alignment_df, aes(x = BAM, y = PercentUnique, fill = 
     fill = "Weefsel"
   ) +
   theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1)
-  )
-
-# Plot tonen
-bam_staafdiagram
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 
