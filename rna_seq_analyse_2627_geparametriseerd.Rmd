@@ -14,10 +14,6 @@ params:
     choices: ["Hersenen", "Lever", "Nier"]
 ---
 
-```{r}
-print(params)
-```
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE)
 ```
@@ -113,7 +109,10 @@ bam_staafdiagram <- ggplot(alignment_df, aes(x = BAM, y = PercentUnique, fill = 
     y = "Percentage uniek gemapte reads (%)",
     fill = "Weefsel"
   ) +
-  theme_minimal()
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
 
 # Plot tonen
 bam_staafdiagram
@@ -493,7 +492,8 @@ ggplot(top20_up, aes(x = reorder(Term, Pvalue), y = -log10(Pvalue))) +
   coord_flip() +
   labs(
     title = sprintf(
-      "Top 20 verrijkte GO-termen voor upgereguleerde genen (%s vs %s)",
+      "Top 20 verrijkte GO-termen voor
+upgereguleerde genen (%s vs %s)",
       params$tissue_A, params$tissue_B
     ),
     x = "GO-term",
@@ -540,7 +540,8 @@ ggplot(top20_down, aes(x = reorder(Term, Pvalue), y = -log10(Pvalue))) +
   coord_flip() +
   labs(
     title = sprintf(
-      "Top 20 verrijkte GO-termen voor downgereguleerde genen (%s vs %s)",
+      "Top 20 verrijkte GO-termen voor 
+downgereguleerde genen (%s vs %s)",
       params$tissue_A, params$tissue_B
     ),
     x = "GO-term",
