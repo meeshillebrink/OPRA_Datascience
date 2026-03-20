@@ -14,6 +14,9 @@ params:
     choices: ["Hersenen", "Lever", "Nier"]
 ---
 
+```{r}
+print(params)
+```
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE)
@@ -195,9 +198,9 @@ PC1_var <- round(100 * summary(pca)$importance[2, 1], 1)
 PC2_var <- round(100 * summary(pca)$importance[2, 2], 1)
 
 # Dynamische kleuren
-tissue_colors <- c(
-  params$tissue_A = "#007A4D",
-  params$tissue_B = "#F0E442"
+tissue_colors <- setNames(
+  c("#007A4D", "#F0E442"),
+  c(params$tissue_A, params$tissue_B)
 )
 
 # Plot
