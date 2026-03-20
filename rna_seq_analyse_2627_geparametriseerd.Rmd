@@ -240,9 +240,9 @@ rownames(annotation_col) <- colnames(vsd_matrix)
 
 # Dynamische kleuren voor weefsels
 annotation_colors <- list(
-  Weefsel = c(
-    params$tissue_A = "#007A4D",
-    params$tissue_B = "#F0E442"
+  Weefsel = setNames(
+    c("#007A4D", "#F0E442"),
+    c(params$tissue_A, params$tissue_B)
   )
 )
 
