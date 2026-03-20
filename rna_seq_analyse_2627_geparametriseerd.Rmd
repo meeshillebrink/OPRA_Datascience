@@ -65,49 +65,41 @@ alignment_statistics <- align(
   nthreads = 30
 )
 ```
+ 
 
-```{r caption_setup, include=FALSE}
+
+```{r fig.cap = sprintf("Figuur 1: Percentage uniek aligned reads per BAM-bestand voor %s- en %s-samples na alignment van RNA-seq reads tegen het humane referentiegenoom hg38.", params$tissue_A, params$tissue_B), message=FALSE, warning=FALSE}
 
 # Percentage uniquely aligned reads berekenen
 unique_reads <- alignment_statistics["Uniquely_mapped_reads", ]
 total_reads  <- alignment_statistics["Total_reads", ]
 percent_unique <- (unique_reads / total_reads) * 100
 
-range_A <- range(unique_reads[grepl(params$tissue_A, bam_files, ignore.case = TRUE)])
-range_B <- range(unique_reads[grepl(params$tissue_B, bam_files, ignore.case = TRUE)])
-
-fig_caption <- sprintf(
-  "Figuur 1: Percentage uniek aligned reads per BAM-bestand voor %s- en %s-samples. Voor %s-samples varieert het aantal uniquely mapped reads van %s tot %s. Voor %s-samples varieert dit van %s tot %s.",
-  params$tissue_A, params$tissue_B,
-  params$tissue_A, range_A[1], range_A[2],
-  params$tissue_B, range_B[1], range_B[2]
-)
-```
-
-```{r fig.cap = fig_caption, message=FALSE, warning=FALSE}
-
 # BAM-bestandsnamen ophalen
 bam_files <- colnames(alignment_statistics)
 
-# Dynamische weefsel-labels bepalen
+# Dynamische weefsel-labels bepalen (case-insensitive)
 tissue_labels <- ifelse(
   grepl(params$tissue_A, bam_files, ignore.case = TRUE),
   params$tissue_A,
   params$tissue_B
 )
 
+# Dataframe maken
 alignment_df <- data.frame(
   BAM = bam_files,
   PercentUnique = as.numeric(percent_unique),
   Tissue = tissue_labels
 )
 
+# Dynamische kleuren
 tissue_colors <- setNames(
   c("#007A4D", "#F0E442"),
   c(params$tissue_A, params$tissue_B)
 )
 
-ggplot(alignment_df, aes(x = BAM, y = PercentUnique, fill = Tissue)) +
+# Plot maken
+bam_staafdiagram <- ggplot(alignment_df, aes(x = BAM, y = PercentUnique, fill = Tissue)) +
   geom_col() +
   scale_fill_manual(values = tissue_colors) +
   labs(
@@ -118,7 +110,12 @@ ggplot(alignment_df, aes(x = BAM, y = PercentUnique, fill = Tissue)) +
     fill = "Weefsel"
   ) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+# Plot tonen
+bam_staafdiagram
 ```
 
 
@@ -175,16 +172,8 @@ dds <- DESeqDataSetFromMatrix(
 )
 ```
 
-```{r}
-# PCA data ophalen
-pca_data <- plotPCA(vsd, intgroup = "weefsel", returnData = TRUE)
 
-# Percentage variantie per PC
-percentVar <- round(100 * attr(pca_data, "percentVar")
-```
-
-
-```{r fig.cap = sprintf("Figuur 2: Principal component analyse van samples van %s en %s op basis van variance-gestabiliseerde genexpressiewaarden. PC1 verklaart %.1f%% van de variantie en PC2 verklaart %.1f%% van de variantie tussen de samples.", params$tissue_A, params$tissue_B, percentVar[1], percentVar[2]), echo=TRUE}
+```{r fig.cap = sprintf( "Figuur 2: Principal component analyse van samples van %s en %s op basis van variance‑gestabiliseerde genexpressiewaarden. De assen tonen de eerste twee principal components en het percentage verklaarde variantie.", params$tissue_A, params$tissue_B), message=FALSE, warning=FALSE}
 
 # Variance stabilizing transformation
 vsd <- vst(dds, blind = FALSE)
@@ -248,9 +237,6 @@ annotation_col <- data.frame(
 )
 rownames(annotation_col) <- colnames(vsd_matrix)
 
-# Zelfde annotatie voor rijen
-annotation_row <- annotation_col
-
 # Dynamische kleuren voor weefsels
 annotation_colors <- list(
   Weefsel = setNames(
@@ -263,7 +249,6 @@ annotation_colors <- list(
 pheatmap(
   cor_matrix,
   annotation_col = annotation_col,
-  annotation_row = annotation_row,
   annotation_colors = annotation_colors,
   main = sprintf("Correlatie tussen %s- en %s-samples", params$tissue_A, params$tissue_B),
   fontsize_row = 10,
@@ -325,7 +310,7 @@ downregulated <- sum(
 ```
 
 
-```{r, fig.cap = sprintf( "Figuur 4: Volcano plot van differentiële genexpressie tussen %s- en %s-weefsel. De genen worden weergegeven als punten waarbij de log2 fold change op de x‑as staat en de negatieve log10 van de adjusted p‑waarde op de y‑as. Significante genen zijn weergegeven in oranje en niet‑significante genen in grijs. De verticale stippellijnen geven de ingestelde log2 fold change thresholds (%s en %s) weer en de horizontale stippellijn geeft de threshold voor de adjusted p‑waarde weer. Genen links van de negatieve drempel (−1) zijn downregulated, terwijl genen rechts van de positieve drempel (1) upregulated zijn.", params$tissue_A, params$tissue_B, -lfc_threshold,lfc_threshold)}
+```{r, fig.cap = sprintf( "Figuur 4: Volcano plot van differentiële genexpressie tussen %s- en %s-weefsel. De genen worden weergegeven als punten waarbij de log2 fold change op de x‑as staat en de negatieve log10 van de adjusted p‑waarde op de y‑as. Significante genen zijn weergegeven in oranje en niet‑significante genen in grijs. De verticale stippellijnen geven de ingestelde log2 fold change thresholds (%s en %s) weer en de horizontale stippellijn geeft de threshold voor de adjusted p‑waarde weer.", params$tissue_A, params$tissue_B, -lfc_threshold,lfc_threshold)}
 
 ggplot(res_df, aes(x = log2FoldChange, y = -log10(padj))) +
   
@@ -564,4 +549,3 @@ downgereguleerde genen (%s vs %s)",
   ) +
   theme_minimal()
 ```
-
