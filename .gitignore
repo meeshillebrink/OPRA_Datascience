@@ -55,3 +55,23 @@ hg38_index/
 qc/
 raw_fastq/
 results/
+
+# maploze bestanden
+brain_1.bam
+brain_1.bam.indel.vcf
+brain_1.bam.summary
+brain_2.bam
+brain_2.bam.indel.vcf
+brain_2.bam.summary
+brain_3.bam
+brain_3.bam.indel.vcf
+brain_3.bam.summary
+liver_1.bam
+liver_1.bam.indel.vcf
+liver_1.bam.summary
+liver_2.bam
+liver_2.bam.indel.vcf
+liver_2.bam.summary
+liver_3.bam
+liver_3.bam.indel.vcf
+liver_3.bam.summary
