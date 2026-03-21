@@ -11,12 +11,16 @@ Bevat de volledige RNA‑seq‑analyse, inclusief preprocessing, kwaliteitscontr
 Genereert automatisch een rapport voor elke combinatie van twee beschikbare weefsels.
 
 Gebruik in RStudio:
-1. Klik op Knit with Parameters 
-2. Er verschijnt een parameterscherm met radiobuttons 
+1. Klik op **Knit with Parameters**  
+2. Er verschijnt een parameterscherm met **radiobuttons**  
 3. Selecteer twee weefsels  
-4. Klik op Knit
+4. Klik op **Knit**
 
 Het gegenereerde document bevat uitsluitend figuren met onderschriften; alle inhoud past zich automatisch aan de gekozen weefsels aan.
+
+### 🔹 `styles.css`  
+CSS‑bestand dat gebruikt wordt voor de opmaak en lay‑out van het hoofdrapport (`rna_seq_analyse_2627.Rmd`).  
+Het zorgt voor consistente styling van koppen, lettertypes, marges en figuurbijschriften.
 
 ### 🔹 `README.md`  
 Documentatie van het project en uitleg over de structuur van de repository.
