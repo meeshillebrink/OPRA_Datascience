@@ -22,12 +22,15 @@ Het gegenereerde document bevat uitsluitend figuren met onderschriften; alle inh
 CSS‑bestand dat gebruikt wordt voor de opmaak en lay‑out van het hoofdrapport (`rna_seq_analyse_2627.Rmd`).  
 Het zorgt voor consistente styling van koppen, lettertypes, marges en figuurbijschriften.
 
+### 🔹 `.gitignore`  
+Bevat uitsluitingsregels voor grote databestanden (FASTQ, BAM, indexbestanden, QC‑output, tussenresultaten) en tijdelijke bestanden.  
+Deze bestanden worden niet meegeversioneerd; de analyse laadt benodigde data automatisch vanaf de HU‑server.
+
+### 🔹 `OPRA_Datascience.Rproj`  
+RStudio‑projectbestand voor het openen van de volledige projectomgeving.
+
 ### 🔹 `README.md`  
 Documentatie van het project en uitleg over de structuur van de repository.
-
-### 🔹 `.gitignore`  
-Sluit grote databestanden (FASTQ, BAM, indexbestanden, QC‑output en tussenresultaten) en tijdelijke bestanden uit.  
-Deze bestanden worden niet meegeversioneerd; de analyse laadt benodigde data automatisch vanaf de HU‑server.
 
 ---
 
