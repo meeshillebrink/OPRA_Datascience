@@ -29,6 +29,18 @@ library(AnnotationDbi)
 library(org.Hs.eg.db)
 ```
 
+```{r}
+# Uniforme plot stijl
+theme_smooth <- theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    axis.title = element_text(size = 13),
+    axis.text = element_text(size = 11),
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 11)
+  )
+```
+
 <br>
 
 # Alignment van RNA-seq reads tegen het humane referentiegenoom hg38
@@ -114,10 +126,10 @@ bam_staafdiagram <- ggplot(alignment_df, aes(x = BAM, y = PercentUnique, fill = 
     y = "Percentage uniek gemapte reads (%)",
     fill = "Weefsel"
   ) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1)
-  )
+  theme_smooth +
+theme(
+  axis.text.x = element_text(angle = 45, hjust = 1)
+)
 
 # Plot tonen
 bam_staafdiagram
@@ -225,11 +237,7 @@ ggplot(pca_plotting, aes(x = PC1, y = PC2)) +
   ) +
   xlab(paste0("PC1 (", PC1_var, "%)")) +
   ylab(paste0("PC2 (", PC2_var, "%)")) +
-  theme_bw() +
-  theme(
-    plot.title = element_text(hjust = 0.5, face = "bold"),
-    text = element_text(size = 14)
-  )
+  theme_smooth
 ```
 
 <br>
@@ -269,10 +277,12 @@ pheatmap(
   annotation_row = annotation_row,
   annotation_colors = annotation_colors,
   main = sprintf("Correlatie tussen %s- en %s-samples", params$tissue_A, params$tissue_B),
-  fontsize_row = 10,
-  fontsize_col = 10,
+  fontsize = 11,
+  fontsize_row = 11,
+  fontsize_col = 11,
+  fontsize_main = 16,
   angle_col = 45,
-  border_color = NA
+  border_color = "grey70"
 )
 ```
 
@@ -390,8 +400,7 @@ ggplot(res_df, aes(x = log2FoldChange, y = -log10(padj))) +
     y = "-log10 adjusted p-waarde",
     color = "Significantie"
   ) +
-  
-  theme_minimal()
+  theme_smooth
 ```
 
 <br>
@@ -463,7 +472,12 @@ pheatmap(
   main = sprintf(
     "Top differentieel tot expressie komende genen tussen %s en %s",
     params$tissue_A, params$tissue_B
-  )
+  ),
+  fontsize = 11,
+  fontsize_row = 11,
+  fontsize_col = 11,
+  fontsize_main = 16,
+  border_color = "grey70"
 )
 ```
 
@@ -535,7 +549,7 @@ upgereguleerde genen (%s vs %s)",
     x = "GO-term",
     y = "-log10 p-waarde"
   ) +
-  theme_minimal()
+  theme_smooth
 ```
 
 <br>
@@ -586,5 +600,5 @@ downgereguleerde genen (%s vs %s)",
     x = "GO-term",
     y = "-log10 p-waarde"
   ) +
-  theme_minimal()
+  theme_smooth
 ```
