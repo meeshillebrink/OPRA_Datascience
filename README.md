@@ -18,10 +18,6 @@ Gebruik in RStudio:
 
 Het gegenereerde document bevat uitsluitend figuren met onderschriften; alle inhoud past zich automatisch aan de gekozen weefsels aan.
 
-### 🔹 `styles.css`  
-CSS‑bestand dat gebruikt wordt voor de opmaak en lay‑out van het hoofdrapport (`rna_seq_analyse_2627.Rmd`).  
-Het zorgt voor consistente styling van koppen, lettertypes, marges en figuurbijschriften.
-
 ### 🔹 `.gitignore`  
 Bevat uitsluitingsregels voor grote databestanden (FASTQ, BAM, indexbestanden, QC‑output, tussenresultaten) en tijdelijke bestanden.  
 Deze bestanden worden niet meegeversioneerd; de analyse laadt benodigde data automatisch vanaf de HU‑server.
