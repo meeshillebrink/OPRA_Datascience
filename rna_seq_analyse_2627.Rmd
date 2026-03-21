@@ -330,9 +330,7 @@ Hoewel de correlatie tussen lever- en hersensamples lager is dan binnen dezelfde
 
 ## Conclusie van principal component analyse en correlatieheatmap
 
-De PCA en correlatieheatmap tonen beide aan dat het weefseltype de belangrijkste bron van variatie in de dataset is.
-Replicaten binnen hetzelfde weefsel clusteren consistent samen, terwijl lever- en hersensamples duidelijk van elkaar gescheiden zijn.
-Dit bevestigt dat de genexpressiedata betrouwbaar zijn en geschikt zijn voor verdere analyse van weefselspecifieke verschillen.
+Beide figuren laten zien dat de samples clusteren op basis van weefseltype. Replicaten binnen hetzelfde weefsel vertonen een sterke overeenkomst in genexpressie en groeperen samen in zowel de principal component analyse als de correlatieheatmap. Tegelijkertijd zijn lever- en hersensamples duidelijk van elkaar gescheiden, wat wijst op weefselspecifieke verschillen in genexpressie. Ondanks deze scheiding is er ook een zekere mate van overeenkomst tussen de genexpressieprofielen van beide weefsels zichtbaar, aangezien de correlaties tussen lever- en hersensamples nog steeds positief zijn.
 
 <br>
 
