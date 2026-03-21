@@ -1,62 +1,37 @@
-# OPRA Datascience – RNA‑seq analyse
-Dit repository bevat de eindopdracht voor de RNA‑seq analyse binnen OPRA Periode C.
+# OPRA Datascience – RNA‑seq analyse (Periode C, 2025–2026)
 
-De volledige analyse staat in:
-* rnaseq_opdracht.Rmd
-
-Grote databestanden (FASTQ, BAM, indexbestanden, QC‑output en tussenresultaten) worden niet meegeversioneerd en zijn uitgesloten via .gitignore.
-
-De analyse laadt deze bestanden automatisch vanaf de HU‑server; handmatig kopiëren is niet nodig.
+Dit repository bevat de eindopdracht voor de RNA‑seq‑analyse binnen OPRA Periode C van het studiejaar 2025–2026.
 
 ## Inhoud van de repository
-- rnaseq_opdracht.Rmd – hoofdrapport met analyses en interpretaties
-- README.md – documentatie van het project
-- .gitignore – uitsluiting van grote databestanden en tijdelijke output
 
-## Repository clonen (RStudio Server / Terminal)
-Optie 1 – via RStudio
-New Project → Version Control → Git → vul de HTTPS‑URL van de repository in.
+### 🔹 `rna_seq_analyse_2627.Rmd` — hoofdrapport  
+Bevat de volledige RNA‑seq‑analyse, inclusief preprocessing, kwaliteitscontrole, normalisatie, clustering, PCA en differentiële expressie.
 
-Optie 2 – via de terminal
+### 🔹 `geparametriseerd_2.Rmd` — geparametriseerde analyse  
+Genereert automatisch een rapport voor elke combinatie van twee beschikbare weefsels.
+
+Gebruik in RStudio:
+1. Klik op Knit with Parameters 
+2. Er verschijnt een parameterscherm met radiobuttons 
+3. Selecteer twee weefsels  
+4. Klik op Knit
+
+Het gegenereerde document bevat uitsluitend figuren met onderschriften; alle inhoud past zich automatisch aan de gekozen weefsels aan.
+
+### 🔹 `README.md`  
+Documentatie van het project en uitleg over de structuur van de repository.
+
+### 🔹 `.gitignore`  
+Sluit grote databestanden (FASTQ, BAM, indexbestanden, QC‑output en tussenresultaten) en tijdelijke bestanden uit.  
+Deze bestanden worden niet meegeversioneerd; de analyse laadt benodigde data automatisch vanaf de HU‑server.
+
+---
+
+## Repository clonen
+
+### Via RStudio  
+**New Project → Version Control → Git →** vul de HTTPS‑URL van deze repository in.
+
+### Via de terminal  
+```bash
 git clone https://github.com/meeshillebrink/OPRA_Datascience.git
-
-Git vraagt vervolgens om:
-Username: je GitHub‑gebruikersnaam
-Password: je Personal Access Token (classic)
-
-Let op: fine‑grained tokens werken niet voor repositories waar je collaborator bent.
-Gebruik daarom een classic token met minimaal de scope "repo".
-
-GitHub‑authenticatie (token en credentials)
-Personal Access Token (classic) aanmaken
-GitHub → Settings → Developer settings →
-Personal access tokens → Tokens (classic) → Generate new token
-Selecteer minimaal: repo
-
-## Credentials instellen (optioneel)
-git config --global user.name  "jouw_gebruikersnaam"
-git config --global user.email "jouw_email"
-git config --global credential.helper store
-
-Met credential.helper store hoef je je token niet bij elke push opnieuw in te voeren.
-
-## Werken met Git
-### Pushen:
-git add .
-git commit -m "Beschrijving van je wijziging"
-git push
-
-### Pullen:
-git pull
-
-## Rapport openen
-- Clone of download deze repository.
-- Open rnaseq_opdracht.Rmd in RStudio.
-- Klik op Knit om het volledige rapport te genereren.
-
-## Projectgroep
-- Arjan Peters
-- Chelaysiah Steba
-- Kerem Şentürk
-- Mees Hillebrink
-- Shinda Mohammed
