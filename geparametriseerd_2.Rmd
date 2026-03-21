@@ -1,6 +1,6 @@
 ---
 title: "Analyse van genexpressieverschillen tussen `r params$tissue_A` en `r params$tissue_B`"
-author: "Arjen Peters, Chelaysiah Steba, Kerem Senturk en Shinda Mohammad"
+author: "Arjen Peters, Chelaysiah Steba en Kerem Senturk"
 date: "`r Sys.Date()`"
 output: html_document
 params:

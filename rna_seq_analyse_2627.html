@@ -9,7 +9,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Arjen Peters, Chelaysiah Steba, Kerem Senturk en Shinda Mohammad" />
+<meta name="author" content="Arjen Peters, Chelaysiah Steba en Kerem Senturk" />
 
 <meta name="date" content="2026-03-20" />
 
@@ -352,8 +352,7 @@ display: none;
 
 <h1 class="title toc-ignore">Analyse van genexpressieverschillen tussen
 hersen- en leverweefsel</h1>
-<h4 class="author">Arjen Peters, Chelaysiah Steba, Kerem Senturk en
-Shinda Mohammad</h4>
+<h4 class="author">Arjen Peters, Chelaysiah Steba en Kerem Senturk</h4>
 <h4 class="date">2026-03-20</h4>
 
 </div>
@@ -779,15 +778,12 @@ twee weefsels bestaan.</p>
 </div>
 <div id="conclusie-van-principal-component-analyse-en-correlatieheatmap" class="section level2">
 <h2>Conclusie van principal component analyse en correlatieheatmap</h2>
-<p>Beide figuren laten zien dat de samples clusteren op basis van
-weefseltype. Replicaten binnen hetzelfde weefsel vertonen een sterke
-overeenkomst in genexpressie en groeperen samen in zowel de principal
-component analyse als de correlatieheatmap. Tegelijkertijd zijn lever-
-en hersensamples duidelijk van elkaar gescheiden, wat wijst op
-weefselspecifieke verschillen in genexpressie. Ondanks deze scheiding is
-er ook een zekere mate van overeenkomst tussen de genexpressieprofielen
-van beide weefsels zichtbaar, aangezien de correlaties tussen lever- en
-hersensamples nog steeds positief zijn.</p>
+<p>De PCA en correlatieheatmap tonen beide aan dat het weefseltype de
+belangrijkste bron van variatie in de dataset is. Replicaten binnen
+hetzelfde weefsel clusteren consistent samen, terwijl lever- en
+hersensamples duidelijk van elkaar gescheiden zijn. Dit bevestigt dat de
+genexpressiedata betrouwbaar zijn en geschikt zijn voor verdere analyse
+van weefselspecifieke verschillen.</p>
 <p><br></p>
 </div>
 <div id="identificatie-van-genen-met-differentiële-expressie-tussen-lever--en-hersenweefsel" class="section level2">
@@ -1116,9 +1112,26 @@ de gespecialiseerde functies van beide weefsels, terwijl de
 overeenkomsten erop wijzen dat sommige genen in beide weefsels
 vergelijkbare basale expressieniveaus hebben.</p>
 <p><br></p>
-<div id="gene-ontology-analyse-van-differentieel-tot-expressie-komende-genen" class="section level2">
-<h2>Gene Ontology analyse van differentieel tot expressie komende
+<div id="gene-ontology-go-analyse-van-differentieel-tot-expressie-komende-genen" class="section level2">
+<h2>Gene Ontology (GO) analyse van differentieel tot expressie komende
 genen</h2>
+<p>Voor de GO-term enrichment analyse zijn eerst de significant up- en
+downgereguleerde genen geselecteerd op basis van een adjusted p-waarde
+&lt; 0.01 en een log2 fold change groter dan 1 of kleiner dan -1. Deze
+genen zijn vervolgens omgezet naar Entrez ID’s, omdat deze vereist zijn
+voor de GO-analyse.</p>
+<p>Met behulp van het GOstats-pakket is een hypergeometrische test
+uitgevoerd om te bepalen welke Gene Ontology (GO) biologische processen
+significant verrijkt zijn. Hierbij is het volledige genenuniversum
+meegenomen als achtergrond om een eerlijke vergelijking te
+garanderen.</p>
+<p>De analyse is afzonderlijk uitgevoerd voor up- en downgereguleerde
+genen, waarbij is gefocust op de categorie Biological Process. Alleen
+GO-termen met een p-waarde kleiner dan 0.01 zijn geselecteerd.</p>
+<p>Tot slot zijn de top 20 meest significant verrijkte GO-termen
+gevisualiseerd in staafdiagrammen, waarbij de -log10(p-waarde) is
+gebruikt om de mate van statistische significantie duidelijk weer te
+geven.</p>
 <pre class="r"><code># Selecteren van genen voor de GO analyse
 
 # upregulated genen volgens opdracht
@@ -1169,18 +1182,16 @@ en een log2 fold change &gt; 1. De verrijking van GO-termen is berekend
 met een GO-term enrichment analyse waarbij de geselecteerde genen worden
 vergeleken met alle genen in de dataset als achtergrond. In de grafiek
 staat op de x-as de −log10 van de p-waarde weergegeven, waarbij hogere
-waarden duiden op een sterkere statistische significantie van de
+waarden wijzen op een sterkere statistische significantie van de
 verrijking.</p>
 <p>De verrijkte GO-termen hebben voornamelijk betrekking op metabole
 processen, zoals small molecule metabolic process, organic acid
 metabolic process, oxoacid metabolic process en lipid metabolic process.
-Daarnaast zijn ook processen verrijkt die betrokken zijn bij de
-biosynthese en afbraak van kleine moleculen en organische zuren, zoals
-carboxylic acid metabolic process, small molecule catabolic process en
-fatty acid metabolic process. Ook termen zoals xenobiotic metabolic
-process en response to xenobiotic stimulus komen naar voren, die verband
-houden met de verwerking en detoxificatie van lichaamsvreemde
-stoffen.</p>
+Daarnaast komen ook processen naar voren die betrokken zijn bij de
+biosynthese en afbraak van kleine moleculen en organische zuren. Ook
+termen zoals xenobiotic metabolic process en response to xenobiotic
+stimulus worden gevonden, die verband houden met de verwerking en
+detoxificatie van lichaamsvreemde stoffen.</p>
 <p>Deze verrijking van metabole en detoxificatieprocessen komt overeen
 met de biologische functie van de lever. De lever speelt een centrale
 rol in het metabolisme van vetten, koolhydraten en andere kleine
@@ -1252,25 +1263,24 @@ zijn in het brein.</p>
 <p>De GO-term enrichment analyse laat zien dat de differentieel tot
 expressie komende genen sterk samenhangen met de biologische functies
 van de onderzochte weefsels. De upgereguleerde genen in leverweefsel
-zijn voornamelijk verrijkt voor metabole processen, zoals het
-metabolisme van kleine moleculen, organische zuren en lipiden, evenals
-processen die betrokken zijn bij de verwerking van xenobiotische
-stoffen. Dit komt overeen met de bekende rol van de lever als centraal
-orgaan voor stofwisseling, detoxificatie en de verwerking van
-verschillende metabolieten.</p>
+zijn voornamelijk verrijkt voor metabole activiteiten, zoals het
+metabolisme van kleine moleculen, organische zuren en lipiden. Daarnaast
+zijn ook functies betrokken bij de verwerking van xenobiotische stoffen
+vertegenwoordigd. Dit komt overeen met de bekende rol van de lever als
+centraal orgaan voor stofwisseling en detoxificatie.</p>
 <p>De genen die relatief hoger tot expressie komen in hersenweefsel zijn
-daarentegen verrijkt voor processen die gerelateerd zijn aan neuronale
+daarentegen verrijkt voor functies die gerelateerd zijn aan neuronale
 ontwikkeling en synaptische communicatie. Voorbeelden hiervan zijn
 synaptische signaaloverdracht, neuronontwikkeling en neurogenese. Deze
-processen zijn kenmerkend voor zenuwweefsel en spelen een belangrijke
-rol in de communicatie tussen neuronen en de organisatie van het
+functies zijn kenmerkend voor zenuwweefsel en spelen een essentiële rol
+in de communicatie tussen neuronen en de organisatie van het
 zenuwstelsel.</p>
-<p>Samen laten de resultaten van de GO-term analyse zien dat de
-differentiële genexpressie tussen lever- en hersenweefsel functioneel
-relevante biologische processen weerspiegelt. De verrijkte GO-termen
-komen overeen met de gespecialiseerde functies van beide weefsels,
-waarbij leverweefsel voornamelijk betrokken is bij metabole processen en
-hersenweefsel bij neuronale en synaptische functies.</p>
+<p>Gezamenlijk laten de resultaten zien dat de verschillen in
+genexpressie tussen lever- en hersenweefsel direct gekoppeld zijn aan
+hun gespecialiseerde biologische functies. De verrijkte GO-termen
+weerspiegelen duidelijk de rol van leverweefsel in metabolisme en
+detoxificatie en van hersenweefsel in neuronale en synaptische
+activiteit.</p>
 <p><br></p>
 </div>
 <div id="conclusie-van-de-analyse-van-genexpressieverschillen-tussen-hersen--en-leverweefsel" class="section level1">
