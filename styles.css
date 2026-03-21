@@ -1,0 +1,55 @@
+body {
+  line-height: 1.7;
+  font-size: 16px;
+  max-width: 900px;
+  margin: auto;
+}
+
+/* Meer ruimte tussen secties */
+h1 {
+  margin-top: 60px;
+  margin-bottom: 20px;
+}
+
+h2 {
+  margin-top: 40px;
+  margin-bottom: 15px;
+}
+
+h3 {
+  margin-top: 30px;
+  margin-bottom: 10px;
+}
+
+/* Paragrafen luchtiger */
+p {
+  margin-bottom: 18px;
+}
+
+/* Code blokken mooier */
+pre {
+  background-color: #f7f7f7;
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+/* Inline code */
+code {
+  background-color: #f0f0f0;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+/* Figuur captions */
+.figure-caption {
+  font-size: 14px;
+  color: #555;
+  margin-top: 8px;
+}
+
+/* Tabellen */
+table {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
