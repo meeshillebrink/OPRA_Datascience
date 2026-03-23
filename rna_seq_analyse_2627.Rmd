@@ -635,14 +635,13 @@ top20_up <- go_up_results |>
 
 ```
 
-```{r figuur 6, echo=TRUE, fig.cap="Figuur 6: GO-term enrichment analyse van de twintig meest significant verrijkte biologische processen voor upgereguleerde genen. De grafiek toont de GO-termen op de y-as en de −log10 p-waarde op de x-as, waarbij hogere waarden een sterkere statistische verrijking aangeven."}
+```{r figuur 6, echo=TRUE, fig.cap="Figuur 6: GO-term enrichmentanalyse van de twintig meest significant verrijkte biologische processen voor genen die upgereguleerd zijn in lever ten opzichte van brein. De grafiek toont de GO-termen op de y-as en de −log10 p-waarde op de x-as, waarbij hogere waarden overeenkomen met kleinere p‑waarden."}
 
-ggplot(top20_up, aes(x = reorder(Term, Pvalue), y = -log10(Pvalue))) +
+ggplot(top20_up, aes(x = reorder(Term, -Pvalue), y = -log10(Pvalue))) +
   geom_col(fill = "orange") +
   coord_flip() +
   labs(
-    title = "Top 20 verrijkte GO-termen voor 
-upgereguleerde genen",
+    title = "Top 20 verrijkte GO-termen voor upgereguleerde genen in lever ten opzichte van brein",
     x = "GO term",
     y = "-log10 p-waarde"
   ) +
@@ -697,13 +696,13 @@ top20_down <- go_down_results |>
   head(20)
 ```
 
-```{r figuur 7, echo=TRUE, fig.cap="Figuur 7: GO-term enrichment analyse van de twintig meest significant verrijkte biologische processen voor downgereguleerde genen. De grafiek toont de GO-termen op de y-as en de −log10 p-waarde op de x-as, waarbij hogere waarden een sterkere statistische verrijking aangeven."}
-ggplot(top20_down, aes(x = reorder(Term, Pvalue), y = -log10(Pvalue))) +
+```{r figuur 7, echo=TRUE, fig.cap="Figuur 7: GO-term enrichmentanalyse van de twintig meest significant verrijkte biologische processen voor genen die downreguleerd zijn in lever ten opzichte van brein. De grafiek toont de GO-termen op de y-as en de −log10 p-waarde op de x-as, waarbij hogere waarden overeenkomen met kleinere p‑waarden."}
+ggplot(top20_down, aes(x = reorder(Term, -Pvalue), y = -log10(Pvalue))) +
   geom_col(fill = "steelblue") +
   coord_flip() +
+  scale_y_continuous() +
   labs(
-    title = "Top 20 verrijkte GO-termen 
-voor downreguleerde genen",
+    title = "Top 20 verrijkte GO-termen voor downreguleerde genen in lever ten opzichte van brein",
     x = "GO term",
     y = "-log10 p-waarde"
   ) +
