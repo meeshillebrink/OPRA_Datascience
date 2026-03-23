@@ -641,14 +641,16 @@ ggplot(top20_up, aes(x = reorder(Term, -Pvalue), y = -log10(Pvalue))) +
   geom_col(fill = "orange") +
   coord_flip() +
   scale_y_continuous() +
-  scale_x_continuous() +
   labs(
     title = "Top 20 verrijkte GO-termen voor upgereguleerde genen 
 in lever ten opzichte van brein",
     x = "GO term",
     y = "-log10 p-waarde"
   ) +
-  theme_smooth
+  theme_smooth +
+  theme(
+  plot.margin = margin(10, 10, 10, 150)
+)
 ```
 
 De grafiek in figuur 6 toont de twintig meest significant verrijkte Gene Ontology (GO) biologische processen voor genen die hoger tot expressie komen in leverweefsel ten opzichte van breinweefsel. Voor deze analyse zijn genen geselecteerd met een adjusted p-waarde < 0,01 en een log2 fold change > 1. De verrijking van GO-termen is berekend met een GO-term enrichment analyse waarbij de geselecteerde genen worden vergeleken met alle genen in de dataset als achtergrond. In de grafiek staat op de x-as de −log10 van de p-waarde weergegeven, waarbij hogere waarden wijzen op een sterkere statistische significantie van de verrijking.
@@ -704,14 +706,16 @@ ggplot(top20_down, aes(x = reorder(Term, -Pvalue), y = -log10(Pvalue))) +
   geom_col(fill = "steelblue") +
   coord_flip() +
   scale_y_continuous() +
-  scale_x_continuous() +
   labs(
     title = "Top 20 verrijkte GO-termen voor downreguleerde genen 
 in lever ten opzichte van het brein",
     x = "GO term",
     y = "-log10 p-waarde"
   ) +
-  theme_smooth
+  theme_smooth +
+  theme(
+  plot.margin = margin(10, 10, 10, 150)
+)
 ```
 
 De grafiek in figuur 7 toont de twintig meest significant verrijkte Gene Ontology (GO) biologische processen voor genen die lager tot expressie komen in leverweefsel en dus relatief hoger tot expressie komen in breinweefsel. Voor deze analyse zijn genen geselecteerd met een adjusted p-waarde < 0,01 en een log2 fold change < −1. De GO-term enrichment analyse vergelijkt deze genen met alle genen in de dataset als achtergrond om te bepalen welke biologische processen statistisch oververtegenwoordigd zijn.
