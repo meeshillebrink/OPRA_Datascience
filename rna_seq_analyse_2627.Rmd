@@ -146,7 +146,7 @@ bam_staafdiagram <- ggplot(alignment_df, aes(x = BAM, y = PercentUnique, fill = 
 # tonen staafdiagram
 bam_staafdiagram
 ```
-In figuur 1 is het percentage uniek aligned reads weergegeven voor drie hersensamples en drie leversamples. De hersensamples zijn weergegeven in groen en de leversamples in geel. De leversamples vertonen percentages tussen ongeveer 49% en 78%, terwijl de hersensamples waarden tonen tussen ongeveer 28% en 66%. Dit laat zien dat het percentage uniek aligned reads varieert tussen de verschillende samples.
+De grafiek in figuur 1 weergeeft het percentage uniek aligned reads voor drie hersensamples en drie leversamples. De hersensamples zijn weergegeven in groen en de leversamples in geel. De leversamples vertonen percentages tussen ongeveer 49% en 78%, terwijl de hersensamples waarden tonen tussen ongeveer 28% en 66%. Dit laat zien dat het percentage uniek aligned reads varieert tussen de verschillende samples.
 
 Binnen beide weefseltypes is daarnaast variatie tussen replicaten zichtbaar. Vooral het tweede hersensample laat een duidelijk lager percentage uniek aligned reads zien dan de overige samples. Een lager percentage uniek aligned reads kan ontstaan doordat een groter deel van de reads op meerdere locaties in het genoom kan alignen of doordat reads onvoldoende overeenkomen met het referentiegenoom. Dit kan bijvoorbeeld veroorzaakt worden door technische variatie tijdens sequencing of door verschillen in de complexiteit van het transcriptome.
 
@@ -265,7 +265,7 @@ op basis van PCA") +
   theme_smooth
 ```
 
-Figuur 2 toont de principal component analyse van de variance-gestabiliseerde genexpressiewaarden van lever- en hersensamples. De samples scheiden duidelijk langs de eerste principal component (PC1), die 61% van de totale variantie verklaart. De drie leversamples (geel) clusteren dicht bij elkaar aan de linkerzijde van de grafiek, terwijl de drie hersensamples (groen) zich aan de rechterzijde bevinden. Dit wijst op duidelijke verschillen in weefselspecifieke genexpressiepatronen tussen lever- en hersenweefsel.
+De grafiek in figuur 2 toont de principal component analyse van de variance-gestabiliseerde genexpressiewaarden van lever- en hersensamples. De samples scheiden duidelijk langs de eerste principal component (PC1), die 61% van de totale variantie verklaart. De drie leversamples (geel) clusteren dicht bij elkaar aan de linkerzijde van de grafiek, terwijl de drie hersensamples (groen) zich aan de rechterzijde bevinden. Dit wijst op duidelijke verschillen in weefselspecifieke genexpressiepatronen tussen lever- en hersenweefsel.
 
 Binnen de hersensamples is enige spreiding zichtbaar langs PC2 (21,3% van de variantie), waarbij één sample duidelijk hoger ligt dan de andere twee. Dit suggereert dat er naast de verschillen tussen weefsels ook variatie tussen replicaten aanwezig is. Ondanks deze variatie blijven de samples echter duidelijk gegroepeerd per weefseltype.
 
