@@ -133,7 +133,7 @@ bam_staafdiagram <- ggplot(alignment_df, aes(x = BAM, y = PercentUnique, fill = 
 # tonen staafdiagram
 bam_staafdiagram
 ```
-In figuur 1 is het percentage uniek aligned reads weergegeven voor drie hersensamples en drie leversamples. De hersensamples zijn weergegeven in groen en de leversamples in geel. De leversamples vertonen percentages tussen ongeveer 49% en 78%, terwijl de hersensamples waarden tonen tussen ongeveer 28% en 66%. Dit laat zien dat het percentage uniek aligned reads varieert tussen de verschillende samples.
+De grafiek in figuur 1 toont het percentage uniek aligned reads weergegeven voor drie hersensamples en drie leversamples. De hersensamples zijn weergegeven in groen en de leversamples in geel. De leversamples vertonen percentages tussen ongeveer 49% en 78%, terwijl de hersensamples waarden tonen tussen ongeveer 28% en 66%. Dit laat zien dat het percentage uniek aligned reads varieert tussen de verschillende samples.
 
 Binnen beide weefseltypes is daarnaast variatie tussen replicaten zichtbaar. Vooral het tweede hersensample laat een duidelijk lager percentage uniek aligned reads zien dan de overige samples. Een lager percentage uniek aligned reads kan ontstaan doordat een groter deel van de reads op meerdere locaties in het genoom kan alignen of doordat reads onvoldoende overeenkomen met het referentiegenoom. Dit kan bijvoorbeeld veroorzaakt worden door technische variatie tijdens sequencing of door verschillen in de complexiteit van het transcriptome.
 
@@ -256,7 +256,7 @@ op basis van PCA") +
   )
 ```
 
-Figuur 2 toont de principal component analyse van de variance-gestabiliseerde genexpressiewaarden van lever- en hersensamples. De samples scheiden duidelijk langs de eerste principal component (PC1), die 61% van de totale variantie verklaart. De drie leversamples (geel) clusteren dicht bij elkaar aan de linkerzijde van de grafiek, terwijl de drie hersensamples (groen) zich aan de rechterzijde bevinden. Dit wijst op duidelijke verschillen in weefselspecifieke genexpressiepatronen tussen lever- en hersenweefsel.
+De grafiek in figuur 2 toont de principal component analyse van de variance-gestabiliseerde genexpressiewaarden van lever- en hersensamples. De samples scheiden duidelijk langs de eerste principal component (PC1), die 61% van de totale variantie verklaart. De drie leversamples (geel) clusteren dicht bij elkaar aan de linkerzijde van de grafiek, terwijl de drie hersensamples (groen) zich aan de rechterzijde bevinden. Dit wijst op duidelijke verschillen in weefselspecifieke genexpressiepatronen tussen lever- en hersenweefsel.
 
 Binnen de hersensamples is enige spreiding zichtbaar langs PC2 (21,3% van de variantie), waarbij één sample duidelijk hoger ligt dan de andere twee. Dit suggereert dat er naast de verschillen tussen weefsels ook variatie tussen replicaten aanwezig is. Ondanks deze variatie blijven de samples echter duidelijk gegroepeerd per weefseltype.
 
@@ -519,7 +519,7 @@ pheatmap(
 )
 ```
 
-De heatmap in figuut 5 toont de genormaliseerde expressiewaarden van de tien genen met de sterkste differentiële expressie tussen lever- en hersenweefsel. Hiervoor zijn de vijf upgereguleerde genen met de kleinste adjusted p-waarde en de vijf downgereguleerde genen met de kleinste adjusted p-waarde geselecteerd uit de differentiële genexpressieanalyse. De expressiewaarden zijn per gen geschaald zodat verschillen in expressiepatronen tussen de samples duidelijk zichtbaar worden. In de heatmap vertegenwoordigt elke rij een gen en elke kolom een sample. De kleurenschaal geeft de relatieve expressie weer, waarbij rood een hogere expressie en blauw een lagere expressie van een gen aangeeft.
+De heatmap in figuur 5 toont de genormaliseerde expressiewaarden van de tien genen met de sterkste differentiële expressie tussen lever- en hersenweefsel. Hiervoor zijn de vijf upgereguleerde genen met de kleinste adjusted p-waarde en de vijf downgereguleerde genen met de kleinste adjusted p-waarde geselecteerd uit de differentiële genexpressieanalyse. De expressiewaarden zijn per gen geschaald zodat verschillen in expressiepatronen tussen de samples duidelijk zichtbaar worden. In de heatmap vertegenwoordigt elke rij een gen en elke kolom een sample. De kleurenschaal geeft de relatieve expressie weer, waarbij rood een hogere expressie en blauw een lagere expressie van een gen aangeeft.
 
 De bovenste cluster van genen (FGB, FGG, APOA2, HRG en APOC3) vertoont een hogere expressie in de leversamples en een lagere expressie in de hersensamples. Deze genen coderen voor eiwitten die voornamelijk betrokken zijn bij processen die typisch zijn voor leverfunctie. FGB en FGG coderen voor subeenheden van fibrinogeen, een eiwit dat een belangrijke rol speelt in de bloedstolling en voornamelijk in de lever wordt geproduceerd. APOA2 en APOC3 behoren tot de apolipoproteïnen en zijn betrokken bij het transport en metabolisme van lipiden in het bloed. HRG (histidine-rich glycoprotein) speelt een rol in bloedstolling, immuunrespons en angiogenese. De hogere expressie van deze genen in leverweefsel komt overeen met de bekende rol van de lever in de productie van plasma-eiwitten en lipoproteïnen.
 
@@ -619,8 +619,8 @@ ggplot(top20_up, aes(x = reorder(Term, -log10(Pvalue)), y = -log10(Pvalue))) +
   geom_col(fill = "orange") +
   coord_flip() +
   labs(
-    title = "Top 20 verrijkte GO-termen voor genen met 
-    verhoogde expressie in leverweefsel",
+    title = "Top 20 verrijkte GO-termen voor upgereguleerde genen 
+         in lever ten opzichte van brein",
     x = "GO term",
     y = "-log10 p-waarde"
   ) +
@@ -680,8 +680,8 @@ ggplot(top20_down, aes(x = reorder(Term, -log10(Pvalue)), y = -log10(Pvalue))) +
   geom_col(fill = "steelblue") +
   coord_flip() +
   labs(
-    title = "Top 20 verrijkte GO-termen voor genen met 
-    verhoogde expressie in hersenweefsel",
+    title = "Top 20 verrijkte GO-termen voor downreguleerde genen 
+in lever ten opzichte van het brein",
     x = "GO term",
     y = "-log10 p-waarde"
   ) +
