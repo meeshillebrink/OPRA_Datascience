@@ -613,14 +613,14 @@ top20_up <- go_up_results |>
 
 ```
 
-```{r figuur 6, echo=TRUE, fig.cap="Figuur 6: GO-term enrichment analyse van de twintig meest significant verrijkte biologische processen voor upgereguleerde genen. De grafiek toont de GO-termen op de y-as en de −log10 p-waarde op de x-as, waarbij hogere waarden een sterkere statistische verrijking aangeven."}
+```{r figuur 6, echo=TRUE, fig.cap="Figuur 6: De grafiek toont de GO-termen op de y-as en de –log10 p-waarde op de x-as, waarbij hogere waarden een sterkere statistische verrijking aangeven. De verrijkte processen hebben voornamelijk betrekking op metabole en detoxificatieprocessen, wat kenmerkend is voor de biologische functie van de lever."}
 
-ggplot(top20_up, aes(x = reorder(Term, Pvalue), y = -log10(Pvalue))) +
+ggplot(top20_up, aes(x = reorder(Term, -log10(Pvalue)), y = -log10(Pvalue))) +
   geom_col(fill = "orange") +
   coord_flip() +
   labs(
-    title = "Top 20 verrijkte GO-termen voor 
-upgereguleerde genen",
+    title = "Top 20 verrijkte GO-termen voor genen met 
+    verhoogde expressie in leverweefsel",
     x = "GO term",
     y = "-log10 p-waarde"
   ) +
@@ -675,17 +675,17 @@ top20_down <- go_down_results |>
   head(20)
 ```
 
-```{r figuur 7, echo=TRUE, fig.cap="Figuur 7: GO-term enrichment analyse van de twintig meest significant verrijkte biologische processen voor downgereguleerde genen. De grafiek toont de GO-termen op de y-as en de −log10 p-waarde op de x-as, waarbij hogere waarden een sterkere statistische verrijking aangeven."}
-ggplot(top20_down, aes(x = reorder(Term, Pvalue), y = -log10(Pvalue))) +
+```{r figuur 7, echo=TRUE, fig.cap="Figuur 7:De grafiek toont de GO-termen op de y-as en de –log10 p-waarde op de x-as, waarbij hogere waarden een sterkere statistische verrijking aangeven. De verrijkte processen zijn voornamelijk gerelateerd aan neuronale ontwikkeling en synaptische communicatie, wat typerend is voor de functie van hersenweefsel.", fig.width=8}
+ggplot(top20_down, aes(x = reorder(Term, -log10(Pvalue)), y = -log10(Pvalue))) +
   geom_col(fill = "steelblue") +
   coord_flip() +
   labs(
-    title = "Top 20 verrijkte GO-termen voor
-downreguleerde genen",
+    title = "Top 20 verrijkte GO-termen voor genen met 
+    verhoogde expressie in hersenweefsel",
     x = "GO term",
     y = "-log10 p-waarde"
   ) +
-  theme_minimal()
+  theme_minimal() 
 ```
 
 De grafiek in figuur 7 toont de twintig meest significant verrijkte Gene Ontology (GO) biologische processen voor genen die lager tot expressie komen in leverweefsel en dus relatief hoger tot expressie komen in hersenweefsel. Voor deze analyse zijn genen geselecteerd met een adjusted p-waarde < 0,01 en een log2 fold change < −1. De GO-term enrichment analyse vergelijkt deze genen met alle genen in de dataset als achtergrond om te bepalen welke biologische processen statistisch oververtegenwoordigd zijn.
