@@ -613,7 +613,7 @@ top20_up <- go_up_results |>
 
 ```
 
-```{r figuur 6, echo=TRUE, fig.cap="Figuur 6: GO-term enrichment analyse van de twintig meest significant verrijkte biologische processen voor upgereguleerde genen. De grafiek toont de GO-termen op de y-as en de −log10 p-waarde op de x-as, waarbij hogere waarden een sterkere statistische verrijking aangeven."}
+```{r figuur 6, echo=TRUE, fig.cap="Figuur 6: De grafiek toont de GO-termen op de y-as en de –log10 p-waarde op de x-as, waarbij hogere waarden een sterkere statistische verrijking aangeven. De verrijkte processen hebben voornamelijk betrekking op metabole en detoxificatieprocessen, wat kenmerkend is voor de biologische functie van de lever."}
 
 ggplot(top20_up, aes(x = reorder(Term, -log10(Pvalue)), y = -log10(Pvalue))) +
   geom_col(fill = "orange") +
@@ -675,7 +675,7 @@ top20_down <- go_down_results |>
   head(20)
 ```
 
-```{r figuur 7, echo=TRUE, fig.cap="Figuur 7: GO-term enrichment analyse van de twintig meest significant verrijkte biologische processen voor downgereguleerde genen. De grafiek toont de GO-termen op de y-as en de −log10 p-waarde op de x-as, waarbij hogere waarden een sterkere statistische verrijking aangeven.", fig.width=8}
+```{r figuur 7, echo=TRUE, fig.cap="Figuur 7:De grafiek toont de GO-termen op de y-as en de –log10 p-waarde op de x-as, waarbij hogere waarden een sterkere statistische verrijking aangeven. De verrijkte processen zijn voornamelijk gerelateerd aan neuronale ontwikkeling en synaptische communicatie, wat typerend is voor de functie van hersenweefsel.", fig.width=8}
 ggplot(top20_down, aes(x = reorder(Term, -log10(Pvalue)), y = -log10(Pvalue))) +
   geom_col(fill = "steelblue") +
   coord_flip() +
