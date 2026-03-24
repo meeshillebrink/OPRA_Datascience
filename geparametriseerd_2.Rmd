@@ -543,7 +543,7 @@ ggplot(top20_up, aes(x = reorder(Term, Pvalue), y = -log10(Pvalue))) +
   labs(
     title = sprintf(
       "Top 20 verrijkte GO-termen voor
-upgereguleerde genen (%s vs %s)",
+   upgereguleerde genen in %s ten opzichte van %s",
       params$tissue_A, params$tissue_B
     ),
     x = "GO-term",
@@ -594,7 +594,7 @@ ggplot(top20_down, aes(x = reorder(Term, Pvalue), y = -log10(Pvalue))) +
   labs(
     title = sprintf(
       "Top 20 verrijkte GO-termen voor 
-downgereguleerde genen (%s vs %s)",
+downgereguleerde genen in %s ten opzichte van %s",
       params$tissue_A, params$tissue_B
     ),
     x = "GO-term",
